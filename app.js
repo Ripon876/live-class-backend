@@ -1,6 +1,7 @@
 const express = require("express");
 const http = require("http");
 const app = express();
+const cors = require("cors")
 const server = http.createServer(app);
 const io = require("socket.io")(server, {
 	cors: {
@@ -9,6 +10,19 @@ const io = require("socket.io")(server, {
 	}
 });
 
+const whitelist = ["http://localhost:3000"];
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || whitelist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+}
+app.use(cors(corsOptions));
+app.use(express.json());
 
 const dbConnect = require("./db/dbConnect");
 dbConnect(); // connecting to db
