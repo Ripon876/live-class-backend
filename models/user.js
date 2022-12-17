@@ -9,6 +9,10 @@ const userSchema = new mongoose.Schema({
 		type: String,
 		required: [true, "Please provide a password!"],
 	},
+	type: {
+		type: String,
+		default: "student",
+	},
 });
 
 const User = mongoose.model("User", userSchema);
