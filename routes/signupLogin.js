@@ -64,8 +64,8 @@ router.post("/login", (req, res) => {
 
 					const token = jwt.sign(
 						{
-							userId: user._id,
-							userEmail: user.email,
+							id: user._id,
+							email: user.email
 						},
 						"RANDOM-TOKEN",
 						{ expiresIn: "24h" }
@@ -73,6 +73,7 @@ router.post("/login", (req, res) => {
 					res.status(200).send({
 						message: "Login Successful",
 						email: user.email,
+						type: user.type,
 						token,
 					});
 				})
