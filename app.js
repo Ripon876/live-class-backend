@@ -37,8 +37,10 @@ const auth = require("./middlewares/auth"); // auth middleware
 
 
 const singupLogin = require('./routes/signupLogin');
+const admin = require('./routes/admin');
 
 app.use('/',singupLogin);
+app.use('/admin',admin);
 
 
 
