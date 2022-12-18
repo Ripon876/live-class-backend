@@ -66,7 +66,8 @@ router.post("/login", (req, res) => {
 					const token = jwt.sign(
 						{
 							id: user._id,
-							email: user.email
+							email: user.email,
+							type: user.type
 						},
 						"RANDOM-TOKEN",
 						{ expiresIn: "24h" }
