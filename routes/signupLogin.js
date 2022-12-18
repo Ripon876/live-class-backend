@@ -13,6 +13,7 @@ router.post("/register", async (req, res) => {
 					.hash(req.body.password, 10)
 					.then((hashedPassword) => {
 						const user = new User({
+							name: req.body.name,
 							email: req.body.email,
 							password: hashedPassword,
 						});

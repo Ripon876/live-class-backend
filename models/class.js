@@ -15,10 +15,7 @@ const classSchema = new mongoose.Schema({
 		type: String,
 		default: "",
 	},
-	teacher: {
-		type: String,
-		default: "",
-	},
+	teacher: {},
 	classDuration: {
 		type: Number,
 		default: "",
