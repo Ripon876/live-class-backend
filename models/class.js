@@ -16,8 +16,8 @@ const classSchema = new mongoose.Schema({
 		default: "",
 	},
 	teacher: {
-		_id : String,
-		name:String
+		_id: String,
+		name: String,
 	},
 	classDuration: {
 		type: Number,
@@ -27,8 +27,13 @@ const classSchema = new mongoose.Schema({
 		type: String,
 		default: "",
 	},
+	status: {
+		type: String,
+		default: "notStarted",
+	},
+	createdAt: { type: Date, expires: "24h", default: Date.now },
 });
 
-const Class = new mongoose.model('Class',classSchema);
+const Class = new mongoose.model("Class", classSchema);
 
-module.exports  = Class;
+module.exports = Class;

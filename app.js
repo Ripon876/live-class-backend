@@ -39,10 +39,12 @@ const auth = require("./middlewares/auth"); // auth middleware
 const singupLogin = require('./routes/signupLogin');
 const admin = require('./routes/admin');
 const teacher = require('./routes/teacher');
+const student = require('./routes/student');
 
 app.use('/',singupLogin);
 app.use('/admin',admin);
 app.use('/teacher',teacher);
+app.use('/student',student);
 
 
 
