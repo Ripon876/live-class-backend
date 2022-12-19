@@ -21,10 +21,10 @@ router.get("/get-classes", auth, async (req, res) => {
 	}
 });
 
-router.get("/get-class/:id", async (req, res) => {
+router.get("/get-class/:id", auth,async (req, res) => {
 	try {
 		const cls = await Class.findById(req.params.id);
-		console.log(cls);
+		
 
 		res.status(200).send({
 			cls: cls,
