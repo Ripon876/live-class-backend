@@ -31,7 +31,9 @@ const classSchema = new mongoose.Schema({
 		type: String,
 		default: "notStarted",
 	},
-	createdAt: { type: Date, expires: "24h", default: Date.now },
+	hasToJoin: Number,
+	students: [],
+	// createdAt: { type: Date, expires: "24h", default: Date.now },
 });
 
 const Class = new mongoose.model("Class", classSchema);

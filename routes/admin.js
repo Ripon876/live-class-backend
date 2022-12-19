@@ -36,10 +36,18 @@ router.get("/get-teachers", async (req, res) => {
 	}
 });
 
+
 router.post("/create-new-class", auth, async (req, res) => {
 	try {
+		// const students = await User.find({ type: "student" }).select(['_id']);
+		const students = await User.find({ type: "student" }).distinct('_id');
+		
 		const newClass = await new Class(req.body);
+		newClass.hasToJoin = students.length;
+		
+		newClass.students = students;
 		await newClass.save();
+		console.log(newClass);
 		res.status(200).send({
 			message: "Class Added Successfully",
 			class: newClass,
