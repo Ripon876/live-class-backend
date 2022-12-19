@@ -47,12 +47,15 @@ const classes = {};
 
 io.on("connection", (socket) => {
 	socket.on("clsStarted", (data) => {
+		
 		console.log(data.clsId);
+
+
 		socket.userId = data.clsId;
 
 		classes[data.clsId] = socket.id;
 
-		console.log(classes);
+		// console.log(classes);
 		// socket.id = data.clsId;
 		// console.log('sId : ',socket.id + ' cId : ' ,data.clsId + ' uId : ' ,socket.userId )
 		socket.emit("me", socket.userId);
