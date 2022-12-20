@@ -3,6 +3,8 @@ const http = require("http");
 const app = express();
 const cors = require("cors");
 const server = http.createServer(app);
+
+// socket server
 const io = require("socket.io")(server, {
 	cors: {
 		origin: "http://localhost:3000",
@@ -10,6 +12,13 @@ const io = require("socket.io")(server, {
 	},
 });
 
+
+// models 
+const User = require('./models/user');
+const Class = require('./models/class');
+
+
+// cors 
 const whitelist = ["http://localhost:3000"];
 const corsOptions = {
 	origin: function (origin, callback) {
@@ -22,12 +31,19 @@ const corsOptions = {
 	credentials: true,
 };
 app.use(cors(corsOptions));
+
+
+// default body parser
 app.use(express.json());
 
+
+// mongodb connection
 const dbConnect = require("./db/dbConnect");
 dbConnect(); // connecting to db
 
-const auth = require("./middlewares/auth"); // auth middleware
+
+// auth middleware
+const auth = require("./middlewares/auth");
 
 // ==========
 //  routes
@@ -43,8 +59,12 @@ app.use("/admin", admin);
 app.use("/teacher", teacher);
 app.use("/student", student);
 
+
+// class & students socket id with their own id
 const classes = {};
 
+
+// socket handler
 io.on("connection", (socket) => {
 	socket.on("clsStarted", (data) => {
 		
@@ -61,7 +81,7 @@ io.on("connection", (socket) => {
 		socket.emit("me", socket.userId);
 	});
 
-	// socket.emit("me", socket.id)
+
 
 	socket.on("disconnect", () => {
 		socket.broadcast.emit("callEnded");
@@ -84,4 +104,7 @@ io.on("connection", (socket) => {
 	});
 });
 
+
+
+// server listening
 server.listen(5000, () => console.log("server is running on port 5000"));

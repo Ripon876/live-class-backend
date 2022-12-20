@@ -33,7 +33,7 @@ router.get("/get-class/:id", auth,async (req, res) => {
 		console.log(err);
 		res.status(500).json({
 			message: "Error creating acount",
-			error,
+			err,
 		});
 	}
 });
