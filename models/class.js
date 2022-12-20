@@ -32,7 +32,7 @@ const classSchema = new mongoose.Schema({
 		default: "notStarted",
 	},
 	hasToJoin: Number,
-	students: [],
+	students: [String],
 	// createdAt: { type: Date, expires: "24h", default: Date.now },
 });
 

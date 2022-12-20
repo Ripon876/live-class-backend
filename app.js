@@ -12,13 +12,11 @@ const io = require("socket.io")(server, {
 	},
 });
 
+// models
+const User = require("./models/user");
+const Class = require("./models/class");
 
-// models 
-const User = require('./models/user');
-const Class = require('./models/class');
-
-
-// cors 
+// cors
 const whitelist = ["http://localhost:3000"];
 const corsOptions = {
 	origin: function (origin, callback) {
@@ -32,15 +30,12 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-
 // default body parser
 app.use(express.json());
-
 
 // mongodb connection
 const dbConnect = require("./db/dbConnect");
 dbConnect(); // connecting to db
-
 
 // auth middleware
 const auth = require("./middlewares/auth");
@@ -59,17 +54,18 @@ app.use("/admin", admin);
 app.use("/teacher", teacher);
 app.use("/student", student);
 
-
 // class & students socket id with their own id
 const classes = {};
+
+
+
+
 
 
 // socket handler
 io.on("connection", (socket) => {
 	socket.on("clsStarted", (data) => {
-		
 		console.log(data.clsId);
-
 
 		socket.userId = data.clsId;
 
@@ -81,28 +77,80 @@ io.on("connection", (socket) => {
 		socket.emit("me", socket.userId);
 	});
 
-
-
 	socket.on("disconnect", () => {
 		socket.broadcast.emit("callEnded");
 	});
 
-	socket.on("callUser", (data) => {
+	socket.on("callUser", async (data) => {
+		let clsId = data.userToCall;
+		let stdId = socket.userId;
 		let sendTo = classes[data.userToCall];
+		console.log("calling : ", data.userToCall, " ", socket.userId);
 
-		io.to(sendTo).emit("callUser", {
-			signal: data.signalData,
-			from: data.from,
-			name: data.name,
-		});
+		// let user = await User.findById(socket.userId);
+		// console.log(user);
+
+		let cls = await Class.findById(clsId).select(["students"]);
+		console.log(cls.students);
+		console.log('std : ', stdId)
+
+		if (cls?.students?.includes(stdId)) {
+			io.to(sendTo).emit("callUser", {
+				signal: data.signalData,
+				from: data.from,
+				name: data.name,
+			});
+		} else {
+
+io.to(classes[stdId]).emit("alreadyJoined", {
+				msg: 'You Already Joined that class'
+			});
+
+
+			console.log("cls not going to held");
+		}
 	});
 
-	socket.on("answerCall", (data) => {
+	socket.on("answerCall",async (data) => {
+		let clsId = socket.userId;
+		let stdId = data.to;
 		let sendTo = classes[data.to];
+
+		console.log("allowed : ", data.to, " class id :", socket.userId);
+
+let cls = await Class.findById(clsId);
+let stdIndex = cls.students.indexOf(stdId);
+let stds = cls.students;
+stds.splice(stdIndex,1);
+
+cls.students = stds;
+cls.hasToJoin--;
+
+await cls.save();
+
 
 		io.to(sendTo).emit("callAccepted", data.signal);
 	});
 });
+
+
+
+
+
+
+// 0
+// 639eddb137e03af7cdbe314c
+// 3af7cdbe314c
+// 1
+// 639efffd7281c8a9bc9d7004
+
+// 639eddb137e03af7cdbe314c
+
+
+
+
+
+
 
 
 

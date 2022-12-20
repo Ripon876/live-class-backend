@@ -1,15 +1,14 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const auth = require("../middlewares/auth");
 const Class = require("../models/class");
 
-
-
-
 router.get("/get-classes", auth, async (req, res) => {
 	try {
-		const classes = await Class.find({});
-		
+		// const classes = await Class.find({});
+		let classes = await Class.find({
+			students: { $in: [req.user.id] },
+		});
 		res.status(200).send({
 			classes: classes,
 		});
