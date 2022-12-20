@@ -29,7 +29,7 @@ const classSchema = new mongoose.Schema({
 	},
 	status: {
 		type: String,
-		default: "notStarted",
+		default: "Not Started",
 	},
 	hasToJoin: Number,
 	students: [String],
