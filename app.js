@@ -63,45 +63,53 @@ io.on("connection", (socket) => {
 		socket.broadcast.emit("callEnded");
 	});
 
-
-
-socket.on('setActive',async (data) => {
-	
-	users[data?.id] = socket.id;
-	console.log(users)
-})
+	socket.on("setActive", async (data) => {
+		users[data?.id] = socket.id;
+		console.log(users);
+	});
 
 	console.log("new connection");
 
-	socket.on("clsEnd", async (data) => {
+	socket.on("clsEnd", async (data, cb) => {
 		let { stdId, clsId } = data;
 		console.log(data);
 
 		try {
 			let cls = await Class.findById(clsId);
 
-			let stdIndex = cls.students.indexOf(stdId);
-			let stds = cls.students;
+			let stdIndex = await cls?.students?.indexOf(stdId);
+			let stds = cls?.students;
 			stds.splice(stdIndex, 1);
 			cls.students = stds;
 			cls.hasToJoin--;
-			if (cls.hasToJoin === 0) {
-				cls.status = "Finished";
-			}
+			// if (cls.hasToJoin === 0 || cls.status === "Finished") {
+			// 	cls.status = "Finished";
+			// 	io.to(users[cls.teacher._id]).emit(
+			// 		"allClassEnd",
+			// 		"No More Class (:"
+			// 	);
+			// }
 
 			await cls.save();
 
+			let classes = await Class.find({
+				students: { $in: [stdId] },
+			}).distinct("_id");
 
-let classes = await Class.find({
-			students: { $in: [stdId] },
-		}).distinct('_id');
+			if (classes.length > 0) {
+				// io.to(users[stdId]).emit("nextClass", classes[0]);
+				cb({
+					type: "joinNextClass",
+					id: classes[0],
+				});
+			} else {
+				// io.to(users[stdId]).emit("allClassEnd", "No More Class (:");
 
-if(classes.length > 0) {
-	io.to(users[stdId]).emit('nextClass',classes[0]);
-}else{
-	io.to(users[stdId]).emit('allClassEnd','No More Class (:');
-}
-
+				cb({
+					type: "allClassEnd",
+					text: "No More Class (:",
+				});
+			}
 		} catch (err) {
 			console.log(err);
 		}
@@ -187,8 +195,6 @@ if(classes.length > 0) {
 // 		}).distinct('_id');
 // console.log(classes)
 // })();
-
-
 
 // server listening
 server.listen(5000, () => console.log("server is running on port 5000"));
