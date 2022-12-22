@@ -82,13 +82,13 @@ io.on("connection", (socket) => {
 			stds.splice(stdIndex, 1);
 			cls.students = stds;
 			cls.hasToJoin--;
-			// if (cls.hasToJoin === 0 || cls.status === "Finished") {
-			// 	cls.status = "Finished";
+			if (cls.hasToJoin === 0 ) {
+				cls.status = "Finished";
 			// 	io.to(users[cls.teacher._id]).emit(
 			// 		"allClassEnd",
 			// 		"No More Class (:"
 			// 	);
-			// }
+			}
 
 			await cls.save();
 
