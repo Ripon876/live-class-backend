@@ -70,6 +70,19 @@ io.on("connection", (socket) => {
 
 	console.log("new connection");
 
+socket.on('getClass',async (id,cb)=> {
+	try{
+const cls = await Class.findById(id).select(['-teacher','-students','-hasToJoin','-status']);
+// console.log(cls);
+
+
+cb(cls);
+	}catch(err){
+		console.log('err on gettting cls : ',err);
+	}
+})
+
+
 	socket.on("clsEnd", async (data, cb) => {
 		let { stdId, clsId } = data;
 		console.log(data);
@@ -79,15 +92,13 @@ io.on("connection", (socket) => {
 
 			let stdIndex = await cls?.students?.indexOf(stdId);
 			let stds = cls?.students;
-			stds.splice(stdIndex, 1);
+			stds?.splice(stdIndex, 1);
 			cls.students = stds;
 			cls.hasToJoin--;
 			if (cls.hasToJoin === 0 ) {
 				cls.status = "Finished";
-			// 	io.to(users[cls.teacher._id]).emit(
-			// 		"allClassEnd",
-			// 		"No More Class (:"
-			// 	);
+				io.to(users[cls.teacher._id]).emit("allClassEnd","No More Class (:");
+				console.log('all students taken class',clsId);
 			}
 
 			await cls.save();
