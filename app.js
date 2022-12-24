@@ -59,6 +59,8 @@ const users = {};
 
 // socket handler
 io.on("connection", (socket) => {
+	console.log("new connection");
+
 	socket.on("disconnect", () => {
 		socket.broadcast.emit("callEnded");
 	});
@@ -68,20 +70,30 @@ io.on("connection", (socket) => {
 		console.log(users);
 	});
 
-	console.log("new connection");
+	socket.on("getClass", async (id, cb) => {
+		try {
+			const cls = await Class.findById(id).select([
+				"-teacher",
+				"-students",
+				"-hasToJoin",
+				"-status",
+			]);
+			// console.log(cls);
 
-socket.on('getClass',async (id,cb)=> {
-	try{
-const cls = await Class.findById(id).select(['-teacher','-students','-hasToJoin','-status']);
-// console.log(cls);
+			cb(cls);
+		} catch (err) {
+			console.log("err on gettting cls : ", err);
+		}
+	});
 
-
-cb(cls);
-	}catch(err){
-		console.log('err on gettting cls : ',err);
-	}
-})
-
+	socket.on("getStudent", async (id, cb) => {
+		try {
+			let std = await User.findById(id).select(['name','_id']);
+			await cb(std);
+		} catch (err) {
+			console.log("err on gettting cls : ", err);
+		}
+	});
 
 	socket.on("clsEnd", async (data, cb) => {
 		let { stdId, clsId } = data;
@@ -95,10 +107,13 @@ cb(cls);
 			stds?.splice(stdIndex, 1);
 			cls.students = stds;
 			cls.hasToJoin--;
-			if (cls.hasToJoin === 0 ) {
+			if (cls.hasToJoin === 0) {
 				cls.status = "Finished";
-				io.to(users[cls.teacher._id]).emit("allClassEnd","No More Class (:");
-				console.log('all students taken class',clsId);
+				io.to(users[cls.teacher._id]).emit(
+					"allClassEnd",
+					"No More Class (:"
+				);
+				console.log("all students taken class", clsId);
 			}
 
 			await cls.save();
