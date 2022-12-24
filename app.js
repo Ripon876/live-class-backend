@@ -77,9 +77,7 @@ io.on("connection", (socket) => {
 				"-hasToJoin",
 				"-status",
 			]);
-			// console.log(cls);
-
-			cb(cls);
+			await cb(cls);
 		} catch (err) {
 			console.log("err on gettting cls : ", err);
 		}
@@ -87,7 +85,7 @@ io.on("connection", (socket) => {
 
 	socket.on("getStudent", async (id, cb) => {
 		try {
-			let std = await User.findById(id).select(['name','_id']);
+			let std = await User.findById(id).select(["name", "_id"]);
 			await cb(std);
 		} catch (err) {
 			console.log("err on gettting cls : ", err);
@@ -122,14 +120,11 @@ io.on("connection", (socket) => {
 			}).distinct("_id");
 
 			if (classes.length > 0) {
-				// io.to(users[stdId]).emit("nextClass", classes[0]);
 				cb({
 					type: "joinNextClass",
 					id: classes[0],
 				});
 			} else {
-				// io.to(users[stdId]).emit("allClassEnd", "No More Class (:");
-
 				cb({
 					type: "allClassEnd",
 					text: "No More Class (:",
@@ -139,87 +134,7 @@ io.on("connection", (socket) => {
 			console.log(err);
 		}
 	});
-
-	// socket.on("clsStarted", (data) => {
-	// 	console.log(data.clsId);
-
-	// 	socket.userId = data.clsId;
-
-	// 	classes[data.clsId] = socket.id;
-
-	// 	// console.log(classes);
-	// 	// socket.id = data.clsId;
-	// 	// console.log('sId : ',socket.id + ' cId : ' ,data.clsId + ' uId : ' ,socket.userId )
-	// 	socket.emit("me", socket.userId);
-	// });
-
-	// socket.on("callUser", async (data) => {
-	// 	let clsId = data.userToCall;
-	// 	let stdId = socket.userId;
-	// 	let sendTo = classes[data.userToCall];
-	// 	console.log("calling : ", data.userToCall, " ", socket.userId);
-
-	// 	// let user = await User.findById(socket.userId);
-	// 	// console.log(user);
-
-	// 	let cls = await Class.findById(clsId).select(["students"]);
-	// 	console.log(cls.students);
-	// 	console.log("std : ", stdId);
-
-	// 	if (cls?.students?.includes(stdId)) {
-	// 		io.to(sendTo).emit("callUser", {
-	// 			signal: data.signalData,
-	// 			from: data.from,
-	// 			name: data.name,
-	// 		});
-	// 	} else {
-	// 		io.to(classes[stdId]).emit("alreadyJoined", {
-	// 			msg: "You Already Joined that class",
-	// 		});
-
-	// 		console.log("cls not going to held");
-	// 	}
-	// });
-
-	// socket.on("answerCall", async (data) => {
-	// 	let clsId = socket.userId;
-	// 	let stdId = data.to;
-	// 	let sendTo = classes[data.to];
-
-	// 	console.log("allowed : ", data.to, " class id :", socket.userId);
-
-	// 	let cls = await Class.findById(clsId);
-
-	// 	let stdIndex = cls.students.indexOf(stdId);
-	// 	let stds = cls.students;
-	// 	stds.splice(stdIndex, 1);
-	// 	cls.students = stds;
-	// 	cls.hasToJoin--;
-
-	// 	if (cls.hasToJoin === 0) {
-	// 		cls.status = "Finished";
-	// 	}
-
-	// 	await cls.save();
-
-	// 	io.to(sendTo).emit("callAccepted", data.signal);
-	// });
 });
-
-// 0
-// 639eddb137e03af7cdbe314c
-// 3af7cdbe314c
-// 1
-// 639efffd7281c8a9bc9d7004
-
-// 639eddb137e03af7cdbe314c
-
-// (async()=> {
-// let classes = await Class.find({
-// 			students: { $in: ['639efffd7281c8a9bc9d7004'] },
-// 		}).distinct('_id');
-// console.log(classes)
-// })();
 
 // server listening
 server.listen(5000, () => console.log("server is running on port 5000"));
