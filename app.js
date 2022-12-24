@@ -73,7 +73,6 @@ io.on("connection", (socket) => {
 	socket.on("getClass", async (id, cb) => {
 		try {
 			const cls = await Class.findById(id).select([
-				"-teacher",
 				"-students",
 				"-hasToJoin",
 				"-status",
