@@ -10,10 +10,13 @@ router.get("/get-classes", auth, async (req, res) => {
 	try {
 		const classes = await Class.find({
 			hasToJoin: { $gt: 0 }
-		});
+		}).select(["-students"]);
+
 		let teacherClasses = classes.filter(
 			(cla) => cla.teacher._id === req.user.id
 		);
+
+
 		res.status(200).send({
 			classes: teacherClasses,
 		});

@@ -92,6 +92,11 @@ io.on("connection", (socket) => {
 		}
 	});
 
+	socket.on("startClasses", async (cb) => {
+		console.log('starting cls')
+		socket.broadcast.emit('startClass')
+	});
+
 	socket.on("clsEnd", async (data, cb) => {
 		let { stdId, clsId } = data;
 		console.log(data);
