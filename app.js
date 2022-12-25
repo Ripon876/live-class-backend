@@ -7,7 +7,8 @@ const PORT = process.env.PORT || 5000;
 // socket server
 const io = require("socket.io")(server, {
 	cors: {
-		origin: "http://localhost:3000",
+		// origin: "http://localhost:3000",
+		origin: "https://live-video-class.netlify.app",
 		methods: ["GET", "POST"],
 	},
 });
@@ -17,7 +18,7 @@ const User = require("./models/user");
 const Class = require("./models/class");
 
 // cors
-const whitelist = ["http://localhost:3000"];
+const whitelist = ["http://localhost:3000","https://live-video-class.netlify.app"];
 const corsOptions = {
 	origin: function (origin, callback) {
 		if (!origin || whitelist.indexOf(origin) !== -1) {
