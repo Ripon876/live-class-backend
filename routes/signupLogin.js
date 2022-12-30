@@ -69,7 +69,7 @@ router.post("/login", (req, res) => {
 							email: user.email,
 							type: user.type
 						},
-						"RANDOM-TOKEN",
+						process.env.JWT_SECRET,
 						{ expiresIn: "24h" }
 					);
 					res.status(200).send({
