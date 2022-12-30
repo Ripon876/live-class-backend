@@ -18,7 +18,10 @@ const User = require("./models/user");
 const Class = require("./models/class");
 
 // cors
-const whitelist = ["http://localhost:3000","https://live-video-class.netlify.app"];
+const whitelist = [
+	"http://localhost:3000",
+	"https://live-video-class.netlify.app",
+];
 const corsOptions = {
 	origin: function (origin, callback) {
 		if (!origin || whitelist.indexOf(origin) !== -1) {
@@ -94,8 +97,8 @@ io.on("connection", (socket) => {
 	});
 
 	socket.on("startClasses", async (cb) => {
-		console.log('starting cls')
-		socket.broadcast.emit('startClass')
+		console.log("starting cls");
+		socket.broadcast.emit("startClass");
 	});
 
 	socket.on("clsEnd", async (data, cb) => {
@@ -142,5 +145,22 @@ io.on("connection", (socket) => {
 	});
 });
 
+app.get("/", (req, res) => {
+	res.status(200).send({
+		serverStatus: "ok",
+	});
+});
+
+setInterval(() => {
+	axios
+		.get("https://live-class.onrender.com")
+		.then((res) => {
+			console.log("server is running");
+		})
+		.catch((err) => {
+			console.log(err);
+		});
+}, 600 * 1000);
+
 // server listening
-server.listen(PORT, () => console.log("server is running on port " ,PORT));
+server.listen(PORT, () => console.log("server is running on port ", PORT));
