@@ -13,6 +13,11 @@ const userSchema = new mongoose.Schema({
 		type: String,
 		required: [true, "Please provide a password!"],
 	},
+	age: Number,
+	phone: {
+		type: String,
+		default: "",
+	},
 	type: {
 		type: String,
 		default: "student",
