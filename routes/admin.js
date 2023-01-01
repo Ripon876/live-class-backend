@@ -22,7 +22,10 @@ router.get("/get-classes", async (req, res) => {
 router.get("/get-teachers", async (req, res) => {
 	try {
 		const teachers = await User.find({ type: "teacher" }).select([
-			"-password" , '-type'
+			"-password",
+			"-type",
+			"-_id",
+			"-__v",
 		]);
 		res.status(200).send({
 			teachers: teachers,
@@ -36,15 +39,34 @@ router.get("/get-teachers", async (req, res) => {
 	}
 });
 
+router.get("/get-students", async (req, res) => {
+	try {
+		const students = await User.find({ type: "student" }).select([
+			"-password",
+			"-type",
+			"-_id",
+			"-__v",
+		]);
+		res.status(200).send({
+			students,
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).json({
+			message: "Error getting students",
+			err,
+		});
+	}
+});
 
 router.post("/create-new-class", auth, async (req, res) => {
 	try {
 		// const students = await User.find({ type: "student" }).select(['_id']);
-		const students = await User.find({ type: "student" }).distinct('_id');
-		
+		const students = await User.find({ type: "student" }).distinct("_id");
+
 		const newClass = await new Class(req.body);
 		newClass.hasToJoin = students.length;
-		
+
 		newClass.students = students;
 		await newClass.save();
 		console.log(newClass);
