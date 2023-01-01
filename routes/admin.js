@@ -24,7 +24,6 @@ router.get("/get-teachers", async (req, res) => {
 		const teachers = await User.find({ type: "teacher" }).select([
 			"-password",
 			"-type",
-			"-_id",
 			"-__v",
 		]);
 		res.status(200).send({
