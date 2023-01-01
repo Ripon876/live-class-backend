@@ -22,7 +22,7 @@ router.get("/get-classes", async (req, res) => {
 router.get("/get-teachers", async (req, res) => {
 	try {
 		const teachers = await User.find({ type: "teacher" }).select([
-			"-password",'-email' , '-type'
+			"-password" , '-type'
 		]);
 		res.status(200).send({
 			teachers: teachers,
