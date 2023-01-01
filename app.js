@@ -2,7 +2,7 @@ const express = require("express");
 const http = require("http");
 const app = express();
 const cors = require("cors");
-const axios = require('axios');
+const axios = require("axios");
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 // socket server
@@ -150,6 +150,43 @@ app.get("/", (req, res) => {
 	res.status(200).send({
 		serverStatus: "ok",
 	});
+});
+
+app.get("/get-user-details", auth, async (req, res) => {
+	try {
+		const user = await User.findById(req.user.id).select([
+			"-password",
+			"-type",
+			"-_id",
+			"-__v",
+		]);
+		res.status(200).send({
+			user,
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).json({
+			message: "Error getting user",
+			err,
+		});
+	}
+});
+
+app.put("/update-user-details", auth, async (req, res) => {
+	try {
+		const user = await User.findByIdAndUpdate(req.user.id, req.body, {
+			new: true,
+		});
+		res.status(200).send({
+			message: "Profile updated",
+		});
+	} catch (err) {
+		// console.log(err);
+		res.status(500).json({
+			message: "Error updating profile",
+			err,
+		});
+	}
 });
 
 setInterval(() => {

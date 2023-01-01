@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
 		type: String,
 		required: [true, "Please provide a password!"],
 	},
-	age: Number,
+	age: String,
 	phone: {
 		type: String,
 		default: "",
