@@ -8,8 +8,8 @@ const PORT = process.env.PORT || 5000;
 // socket server
 const io = require("socket.io")(server, {
 	cors: {
-		// origin: "http://localhost:3000",
-		origin: "https://live-video-class.netlify.app",
+		origin: "http://localhost:3000",
+		// origin: "https://live-video-class.netlify.app",
 		methods: ["GET", "POST"],
 	},
 });
@@ -61,6 +61,7 @@ app.use("/student", student);
 
 // class & students socket id with their own id
 const users = {};
+let studentsStates = {};
 
 // socket handler
 io.on("connection", (socket) => {
@@ -100,6 +101,7 @@ io.on("connection", (socket) => {
 	socket.on("startClasses", async (cb) => {
 		console.log("starting cls");
 		socket.broadcast.emit("startClass");
+		cb("Classes has been started", "");
 	});
 
 	socket.on("clsEnd", async (data, cb) => {
@@ -120,6 +122,7 @@ io.on("connection", (socket) => {
 					"allClassEnd",
 					"No More Class (:"
 				);
+				checkAllClass(socket);
 				console.log("all students taken class", clsId);
 			}
 
@@ -140,6 +143,28 @@ io.on("connection", (socket) => {
 					text: "No More Class (:",
 				});
 			}
+		} catch (err) {
+			console.log(err);
+		}
+	});
+
+	socket.on("newClassStarted", async (stdId, clsId) => {
+		try {
+			let cls = await Class.findById(clsId).select([
+				"subject",
+				"teacher",
+			]);
+			let std = await User.findById(stdId).select(["name"]);
+			let state = {
+				cls: {
+					subject: cls.subject,
+					teacher: cls.teacher.name,
+				},
+				student: std.name,
+			};
+			studentsStates[stdId] = state;
+			console.log(studentsStates);
+			socket.broadcast.emit("studentsStates", studentsStates);
 		} catch (err) {
 			console.log(err);
 		}
@@ -199,6 +224,21 @@ setInterval(() => {
 			console.log(err);
 		});
 }, 600 * 1000);
+
+const checkAllClass = async (socket) => {
+	try {
+		let classes = await Class.find({
+			status: "Not Started",
+		});
+		if (classes.length === 0) {
+			socket.broadcast.emit("allClsTaken");
+			studentsStates = {};
+		}
+		// console.log("classes", classes);
+	} catch (err) {
+		console.log(err);
+	}
+};
 
 // server listening
 server.listen(PORT, () => console.log("server is running on port ", PORT));
