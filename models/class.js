@@ -32,6 +32,11 @@ const classSchema = new mongoose.Schema({
 		default: "",
 	},
 	checklist: [],
+	pdf: {
+		name: String,
+		visibleFor: Number,
+		file: String,
+	},
 	status: {
 		type: String,
 		default: "Not Started",
