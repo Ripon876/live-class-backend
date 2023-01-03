@@ -31,6 +31,7 @@ const classSchema = new mongoose.Schema({
 		type: String,
 		default: "",
 	},
+	checklist: [],
 	status: {
 		type: String,
 		default: "Not Started",
