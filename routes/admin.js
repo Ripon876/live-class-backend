@@ -176,6 +176,11 @@ module.exports = router;
 const getRoles = async (req, res, role) => {
 	const roles = await User.find({ type: role }).select([
 		"-password",
+		"-address",
+		"-age",
+		"-city",
+		"-email",
+		"-phone",
 		"-type",
 		"-__v",
 	]);
