@@ -19,6 +19,10 @@ const classSchema = new mongoose.Schema({
 		_id: String,
 		name: String,
 	},
+	roleplayer: {
+		_id: String,
+		name: String,
+	},
 	classDuration: {
 		type: Number,
 		default: "",
