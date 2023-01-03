@@ -38,6 +38,17 @@ router.get("/get-teachers", async (req, res) => {
 		});
 	}
 });
+router.get("/get-examiners", async (req, res) => {
+	try {
+		getRoles(req, res, "teacher");
+	} catch (err) {
+		console.log(err);
+		res.status(500).json({
+			message: "Error getting teachers",
+			error,
+		});
+	}
+});
 
 router.get("/get-roleplayers", async (req, res) => {
 	try {
