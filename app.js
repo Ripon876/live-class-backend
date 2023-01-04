@@ -188,6 +188,7 @@ io.on("connection", (socket) => {
 	});
 
 	socket.on("addWithRoleplayer", async (stdId, clsId) => {
+		// console.log('adding with roleplayer')
 		let exam = await Class.findById(clsId).select(["roleplayer"]);
 		io.to(users[exam.roleplayer._id]).emit("joinCandidate", stdId);
 	});
