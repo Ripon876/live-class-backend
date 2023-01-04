@@ -36,7 +36,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // default body parser
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: "10mb" }));
 
 // mongodb connection
 const dbConnect = require("./db/dbConnect");
@@ -53,11 +53,13 @@ const singupLogin = require("./routes/signupLogin");
 const admin = require("./routes/admin");
 const teacher = require("./routes/teacher");
 const student = require("./routes/student");
+const roleplayer = require("./routes/roleplayer");
 
 app.use("/", singupLogin);
 app.use("/admin", admin);
 app.use("/teacher", teacher);
 app.use("/student", student);
+app.use("/roleplayer", roleplayer);
 
 // class & students socket id with their own id
 const users = {};
