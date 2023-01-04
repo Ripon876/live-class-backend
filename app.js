@@ -124,6 +124,13 @@ io.on("connection", (socket) => {
 					"allClassEnd",
 					"No More Class (:"
 				);
+				if (cls.roleplayer) {
+					io.to(users[cls.roleplayer._id]).emit(
+						"allClassEnd",
+						"No More Class (:"
+					);
+				}
+
 				checkAllClass(socket);
 				console.log("all students taken class", clsId);
 			}
@@ -170,6 +177,14 @@ io.on("connection", (socket) => {
 		} catch (err) {
 			console.log(err);
 		}
+	});
+
+	// ===========
+	//  roleplayer
+	// =============
+
+	socket.on("joinRolplayer", async (rpPId, exId) => {
+		io.to(users[exId]).emit("joinRolplayer", rpPId);
 	});
 });
 
