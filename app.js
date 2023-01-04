@@ -186,6 +186,11 @@ io.on("connection", (socket) => {
 	socket.on("joinRolplayer", async (rpPId, exId) => {
 		io.to(users[exId]).emit("joinRolplayer", rpPId);
 	});
+
+	socket.on("addWithRoleplayer", async (stdId, clsId) => {
+		let exam = await Class.findById(clsId).select(["roleplayer"]);
+		io.to(users[exam.roleplayer._id]).emit("joinCandidate", stdId);
+	});
 });
 
 app.get("/", (req, res) => {
