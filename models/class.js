@@ -1,11 +1,5 @@
 const mongoose = require("mongoose");
-// {
-//   title: 'dsfsdfdsfds',
-//   subject: 'Physics',
-//   teacher: 'Mark',
-//   classDuration: '2',
-//   startTime: '10:32'
-// }
+
 const classSchema = new mongoose.Schema({
 	title: {
 		type: String,
