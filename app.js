@@ -75,7 +75,7 @@ io.on("connection", (socket) => {
 
 	socket.on("setActive", async (data) => {
 		users[data?.id] = socket.id;
-		console.log(users);
+		// console.log(users);
 	});
 
 	socket.on("getClass", async (id, cb) => {
@@ -108,7 +108,7 @@ io.on("connection", (socket) => {
 
 	socket.on("clsEnd", async (data, cb) => {
 		let { stdId, clsId } = data;
-		console.log(data);
+		console.log("cls end", data);
 
 		try {
 			let cls = await Class.findById(clsId);
@@ -118,6 +118,7 @@ io.on("connection", (socket) => {
 			stds?.splice(stdIndex, 1);
 			cls.students = stds;
 			cls.hasToJoin--;
+
 			if (cls.hasToJoin === 0) {
 				cls.status = "Finished";
 				io.to(users[cls.teacher._id]).emit(

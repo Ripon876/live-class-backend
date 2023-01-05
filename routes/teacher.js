@@ -64,6 +64,18 @@ router.get("/starting-class/:id", auth, async (req, res) => {
 
 router.post("/submit-mark", auth, async (req, res) => {
 	try {
+		let exam = await Class.findById(req.body.eId).select([
+			"_id",
+			"subject",
+		]);
+
+		req.body = {
+			...req.body,
+			exam: {
+				...exam,
+			},
+		};
+		delete req.body.eId;
 		let mark = await new Mark({
 			...req.body,
 			date: new Date().toJSON().slice(0, 10),

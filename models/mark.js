@@ -10,9 +10,9 @@ const markSchema = new mongoose.Schema({
 		default: "",
 	},
 	list: [],
-	eId: {
-		type: String,
-		default: "",
+	exam: {
+		_id: String,
+		subject: String,
 	},
 	cId: {
 		type: String,
