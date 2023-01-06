@@ -111,6 +111,8 @@ io.on("connection", (socket) => {
 		console.log("cls end", data);
 
 		try {
+			socket.emit("cdChanging");
+
 			let cls = await Class.findById(clsId);
 
 			let stdIndex = await cls?.students?.indexOf(stdId);
@@ -206,7 +208,6 @@ io.on("connection", (socket) => {
 	socket.on("getExamsStates", (cb) => {
 		cb(studentsStates);
 	});
-
 });
 
 app.get("/", (req, res) => {
