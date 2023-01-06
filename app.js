@@ -172,7 +172,10 @@ io.on("connection", (socket) => {
 					subject: cls.subject,
 					teacher: cls.teacher.name,
 				},
-				student: std.name,
+				student: {
+					name: std.name,
+					_id: std._id,
+				},
 			};
 			studentsStates[stdId] = state;
 			console.log(studentsStates);
@@ -203,6 +206,7 @@ io.on("connection", (socket) => {
 	socket.on("getExamsStates", (cb) => {
 		cb(studentsStates);
 	});
+
 });
 
 app.get("/", (req, res) => {
