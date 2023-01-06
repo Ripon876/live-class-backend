@@ -161,12 +161,14 @@ io.on("connection", (socket) => {
 	socket.on("newClassStarted", async (stdId, clsId) => {
 		try {
 			let cls = await Class.findById(clsId).select([
+				"_id",
 				"subject",
 				"teacher",
 			]);
 			let std = await User.findById(stdId).select(["name"]);
 			let state = {
 				cls: {
+					_id: cls._id,
 					subject: cls.subject,
 					teacher: cls.teacher.name,
 				},
@@ -192,6 +194,14 @@ io.on("connection", (socket) => {
 		// console.log('adding with roleplayer')
 		let exam = await Class.findById(clsId).select(["roleplayer"]);
 		io.to(users[exam.roleplayer._id]).emit("joinCandidate", stdId);
+	});
+
+	// ===========
+	//  admin
+	// =============
+
+	socket.on("getExamsStates", (cb) => {
+		cb(studentsStates);
 	});
 });
 
