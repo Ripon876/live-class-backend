@@ -64,7 +64,7 @@ router.get("/get-roleplayers", async (req, res) => {
 
 router.post("/add-instructor", auth, async (req, res) => {
 	try {
-		createRole(req, res, "teacher", "Instructor");
+		createRole(req, res, "teacher", "Examiner");
 	} catch (err) {
 		console.log(err);
 		res.status(500).json({
@@ -257,6 +257,6 @@ const removeRole = async (req, res) => {
 
 	await User.findByIdAndRemove(id);
 	res.status(200).send({
-		message: "Instructor removed successfully",
+		message: "Removed successfully",
 	});
 };
