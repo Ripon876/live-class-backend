@@ -124,7 +124,7 @@ router.get("/get-students", async (req, res) => {
 	} catch (err) {
 		console.log(err);
 		res.status(500).json({
-			message: "Error getting students",
+			message: "Error getting candidates",
 			err,
 		});
 	}
@@ -142,13 +142,13 @@ router.post("/create-new-class", auth, async (req, res) => {
 		await newClass.save();
 		console.log(newClass);
 		res.status(200).send({
-			message: "Class Added Successfully",
+			message: "Exam Added Successfully",
 			class: newClass,
 		});
 	} catch (err) {
 		console.log(err);
 		res.status(500).json({
-			message: "Error creating class",
+			message: "Error creating exam",
 			err,
 		});
 	}
@@ -160,12 +160,12 @@ router.delete("/delete-class", async (req, res) => {
 		console.log(id);
 		await Class.findByIdAndRemove(id);
 		res.status(200).send({
-			message: "Class delete successfully",
+			message: "Exam delete successfully",
 		});
 	} catch (err) {
 		console.log(err);
 		res.status(500).json({
-			message: "Error deleteing class",
+			message: "Error deleteing exam",
 			err,
 		});
 	}
@@ -174,18 +174,39 @@ router.delete("/delete-class", async (req, res) => {
 module.exports = router;
 
 const getRoles = async (req, res, role) => {
-	const roles = await User.find({ type: role }).select([
-		"-password",
-		"-address",
-		"-age",
-		"-city",
-		"-email",
-		"-phone",
-		"-type",
-		"-__v",
-	]);
+	const roles = await User.find({ type: role }).select(["_id", "name"]);
+
+	const exams = await Class.find({
+		status: "Not Started",
+	}).select([role, "-_id"]);
+
+  
+	let examsIds = exams.map((item) => item[role]?._id).filter((item) => item);
+	let rolesIds = roles
+		.map((item) => item._id.toString())
+		.filter((item) => item);
+
+	let freeRoles = rolesIds.filter(function (n) {
+		return !this.has(n);
+	}, new Set(examsIds));
+
+	console.log("freeRoles :", freeRoles);
+	console.log("roles :", roles);
+ 
+// [
+//   { _id: new ObjectId("63b17709f5eab7b9b8f124d0"), name: 'Teacher 1' },
+//   { _id: new ObjectId("63b5ac596cc1ac64cbba8dbd"), name: 'Techer 2' }
+// ]
+
+let rolesCanAdd = roles.filter((item) => freeRoles.includes(item._id.toString()));
+
+console.log(rolesCanAdd);
+
+
+
+	console.log("=================");
 	res.status(200).send({
-		roles,
+		roles: rolesCanAdd
 	});
 };
 
