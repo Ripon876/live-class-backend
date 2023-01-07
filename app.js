@@ -111,7 +111,7 @@ io.on("connection", (socket) => {
 		console.log("cls end", data);
 
 		try {
-			socket.emit("cdChanging");
+			socket.broadcast.emit("cdChanging");
 
 			let cls = await Class.findById(clsId);
 
@@ -173,6 +173,7 @@ io.on("connection", (socket) => {
 					_id: cls._id,
 					subject: cls.subject,
 					teacher: cls.teacher.name,
+					roleplayer: cls?.roleplayer?.name,
 				},
 				student: {
 					name: std.name,
@@ -207,6 +208,16 @@ io.on("connection", (socket) => {
 
 	socket.on("getExamsStates", (cb) => {
 		cb(studentsStates);
+	});
+
+	socket.on("clearStates", (cb) => {
+		studentsStates = {};
+		cb(studentsStates);
+	});
+	socket.on("getExamInfo", (id, cb) => {
+		let exm = Object.values(studentsStates)?.find((e) => e.cls._id == id);
+
+		cb(exm);
 	});
 });
 
