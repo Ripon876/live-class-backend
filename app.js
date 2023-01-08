@@ -269,6 +269,21 @@ app.put("/update-user-details", auth, async (req, res) => {
 	}
 });
 
+app.get("/get-start-time", async (req, res) => {
+	try {
+		let examTiem = await Class.find({}).select(["startTime"]);
+		res.status(200).send({
+			st: examTiem[0]?.startTime,
+		});
+	} catch (err) {
+		// console.log(err);
+		res.status(500).json({
+			message: "Error updating profile",
+			err,
+		});
+	}
+});
+
 setInterval(() => {
 	axios
 		.get("https://live-class.onrender.com")
