@@ -236,19 +236,19 @@ io.on("connection", (socket) => {
 					students: { $in: [user.id] },
 				}).select(["-students"]);
 
-				let cls = await Class.findById(classes[0]._id).select([
+				let cls = await Class.findById(classes[0]?._id).select([
 					"students",
 					"-_id",
 				]);
-				let firstExamId = cls.students.indexOf(user.id);
-				cb(false, classes[firstExamId]._id.toString());
-			} else if (user.type === "teacher" || user.type === "roleplayer") {
+				let firstExamId = cls?.students?.indexOf(user?.id);
+				cb(false, classes[firstExamId]?._id.toString());
+			} else if (user?.type === "teacher" || user?.type === "roleplayer") {
 				let query = {
-					[user.type + "._id"]: user.id,
+					[user?.type + "._id"]: user?.id,
 				};
 				let exam = await Class.find(query).select(["_id"]);
 
-				cb(false, exam[0]._id.toString());
+				cb(false, exam[0]?._id?.toString());
 			}
 		} catch (err) {
 			console.log(err);
@@ -302,10 +302,20 @@ app.put("/update-user-details", auth, async (req, res) => {
 
 app.get("/get-start-time", async (req, res) => {
 	try {
-		let examTiem = await Class.find({}).select(["startTime"]);
-		res.status(200).send({
-			st: examTiem[0]?.startTime,
+		let examTiem = await Class.find({
+			status: "Not Started",
+		}).select(["startTime"]);
+		if (examTiem.length !== 0) {
+			res.status(200).send({
+				st: examTiem[0]?.startTime,
+				msg: '',
+			});
+		}else{
+			res.status(200).send({
+			st: 0,
+		    msg : 'Exams Ended, wait for next schedule'
 		});
+		}
 	} catch (err) {
 		// console.log(err);
 		res.status(500).json({
