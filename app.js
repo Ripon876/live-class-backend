@@ -224,6 +224,37 @@ io.on("connection", (socket) => {
 
 		cb(exm);
 	});
+
+	// ==========================
+	//  For all role except admin
+	// ==========================
+
+	socket.on("getExamId", async (user, cb) => {
+		try {
+			if (user.type === "student") {
+				let classes = await Class.find({
+					students: { $in: [user.id] },
+				}).select(["-students"]);
+
+				let cls = await Class.findById(classes[0]._id).select([
+					"students",
+					"-_id",
+				]);
+				let firstExamId = cls.students.indexOf(user.id);
+				cb(false, classes[firstExamId]._id.toString());
+			} else if (user.type === "teacher" || user.type === "roleplayer") {
+				let query = {
+					[user.type + "._id"]: user.id,
+				};
+				let exam = await Class.find(query).select(["_id"]);
+
+				cb(false, exam[0]._id.toString());
+			}
+		} catch (err) {
+			console.log(err);
+			cb(true);
+		}
+	});
 });
 
 app.get("/", (req, res) => {

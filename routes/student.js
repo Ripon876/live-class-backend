@@ -16,7 +16,7 @@ router.get("/get-classes", auth, async (req, res) => {
 			"-_id",
 		]);
 		let firstClassIndex = cls.students.indexOf(req.user.id);
-
+		// console.log("classes :", classes[firstClassIndex]._id);
 		res.status(200).send({
 			classes: classes,
 			firstClassIndex,
