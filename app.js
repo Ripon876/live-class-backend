@@ -85,7 +85,12 @@ io.on("connection", (socket) => {
 				"-hasToJoin",
 				"-status",
 			]);
-			await cb(cls);
+
+			if (cls === null || cls.length === 0 || cls.status === "Finished") {
+				await cb(null, true);
+			} else {
+				await cb(cls, false);
+			}
 		} catch (err) {
 			console.log("err on gettting cls : ", err);
 		}
