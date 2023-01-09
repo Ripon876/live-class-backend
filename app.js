@@ -234,6 +234,7 @@ io.on("connection", (socket) => {
 			if (user.type === "student") {
 				let classes = await Class.find({
 					students: { $in: [user.id] },
+					status: "Not Started",
 				}).select(["-students"]);
 
 				let cls = await Class.findById(classes[0]?._id).select([
@@ -241,13 +242,19 @@ io.on("connection", (socket) => {
 					"-_id",
 				]);
 				let firstExamId = cls?.students?.indexOf(user?.id);
+				console.log(classes, firstExamId);
+
 				cb(false, classes[firstExamId]?._id.toString());
-			} else if (user?.type === "teacher" || user?.type === "roleplayer") {
+			} else if (
+				user?.type === "teacher" ||
+				user?.type === "roleplayer"
+			) {
 				let query = {
 					[user?.type + "._id"]: user?.id,
+					status: "Not Started",
 				};
 				let exam = await Class.find(query).select(["_id"]);
-
+				console.log(exam);
 				cb(false, exam[0]?._id?.toString());
 			}
 		} catch (err) {
@@ -261,6 +268,49 @@ app.get("/", (req, res) => {
 	res.status(200).send({
 		serverStatus: "ok",
 	});
+});
+
+app.post("/get-exam-id", async (req, res) => {
+	console.log(req.body);
+	console.log("htting route");
+
+	let user = req.body;
+	try {
+		if (user.type === "student") {
+			let classes = await Class.find({
+				students: { $in: [user.id] },
+				status: "Not Started",
+			}).select(["-students"]);
+
+			let cls = await Class.findById(classes[0]?._id).select([
+				"students",
+				"-_id",
+			]);
+			let firstExamId = cls?.students?.indexOf(user?.id);
+			console.log(classes, firstExamId);
+
+			res.status(200).send({
+				id: classes[firstExamId]?._id.toString(),
+			});
+		} else if (user?.type === "teacher" || user?.type === "roleplayer") {
+			let query = {
+				[user?.type + "._id"]: user?.id,
+				status: "Not Started",
+			};
+			let exam = await Class.find(query).select(["_id"]);
+			console.log(exam);
+
+			res.status(200).send({
+				id: exam[0]?._id?.toString(),
+			});
+		}
+	} catch (err) {
+		console.log(err);
+		res.status(500).json({
+			message: "Error getting user",
+			err,
+		});
+	}
 });
 
 app.get("/get-user-details", auth, async (req, res) => {
@@ -308,13 +358,13 @@ app.get("/get-start-time", async (req, res) => {
 		if (examTiem.length !== 0) {
 			res.status(200).send({
 				st: examTiem[0]?.startTime,
-				msg: '',
+				msg: "",
 			});
-		}else{
+		} else {
 			res.status(200).send({
-			st: 0,
-		    msg : 'Exams Ended, wait for next schedule'
-		});
+				st: 0,
+				msg: "Exams Ended, wait for next schedule",
+			});
 		}
 	} catch (err) {
 		// console.log(err);
