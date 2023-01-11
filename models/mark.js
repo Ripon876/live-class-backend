@@ -12,7 +12,7 @@ const markSchema = new mongoose.Schema({
 	list: [],
 	exam: {
 		_id: String,
-		subject: String,
+		title: String,
 	},
 	cId: {
 		type: String,
