@@ -64,15 +64,12 @@ router.get("/starting-class/:id", auth, async (req, res) => {
 
 router.post("/submit-mark", auth, async (req, res) => {
 	try {
-		let exam = await Class.findById(req.body.eId).select([
-			"_id",
-			"subject",
-		]);
-
+		let exam = await Class.findById(req.body.eId);
 		req.body = {
 			...req.body,
 			exam: {
-				...exam,
+				_id: exam?._id,
+				title: exam?.title,
 			},
 		};
 		delete req.body.eId;
