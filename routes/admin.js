@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const auth = require("../middlewares/auth");
 const User = require("../models/user");
 const Class = require("../models/class");
+const Mark = require("../models/mark");
 
 router.get("/get-classes", async (req, res) => {
 	try {
@@ -159,6 +160,9 @@ router.delete("/delete-class", async (req, res) => {
 		const id = req.body.id;
 		console.log(id);
 		await Class.findByIdAndRemove(id);
+		await Mark.deleteMany({
+			"exam._id": id,
+		});
 		res.status(200).send({
 			message: "Exam delete successfully",
 		});
@@ -180,7 +184,6 @@ const getRoles = async (req, res, role) => {
 		status: "Not Started",
 	}).select([role, "-_id"]);
 
-  
 	let examsIds = exams.map((item) => item[role]?._id).filter((item) => item);
 	let rolesIds = roles
 		.map((item) => item._id.toString())
@@ -192,21 +195,21 @@ const getRoles = async (req, res, role) => {
 
 	console.log("freeRoles :", freeRoles);
 	console.log("roles :", roles);
- 
-// [
-//   { _id: new ObjectId("63b17709f5eab7b9b8f124d0"), name: 'Teacher 1' },
-//   { _id: new ObjectId("63b5ac596cc1ac64cbba8dbd"), name: 'Techer 2' }
-// ]
 
-let rolesCanAdd = roles.filter((item) => freeRoles.includes(item._id.toString()));
+	// [
+	//   { _id: new ObjectId("63b17709f5eab7b9b8f124d0"), name: 'Teacher 1' },
+	//   { _id: new ObjectId("63b5ac596cc1ac64cbba8dbd"), name: 'Techer 2' }
+	// ]
 
-console.log(rolesCanAdd);
+	let rolesCanAdd = roles.filter((item) =>
+		freeRoles.includes(item._id.toString())
+	);
 
-
+	console.log(rolesCanAdd);
 
 	console.log("=================");
 	res.status(200).send({
-		roles: rolesCanAdd
+		roles: rolesCanAdd,
 	});
 };
 
