@@ -5,10 +5,6 @@ const classSchema = new mongoose.Schema({
 		type: String,
 		default: "",
 	},
-	subject: {
-		type: String,
-		default: "",
-	},
 	teacher: {
 		_id: String,
 		name: String,
