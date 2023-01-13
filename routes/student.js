@@ -11,7 +11,7 @@ router.get("/get-classes", auth, async (req, res) => {
 			students: { $in: [req.user.id] },
 		}).select(["-students"]);
 
-		let cls = await Class.findById(classes[0]._id).select([
+		let cls = await Class.findById(classes[0]?._id).select([
 			"students",
 			"-_id",
 		]);

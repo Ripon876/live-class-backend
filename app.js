@@ -82,7 +82,6 @@ io.on("connection", (socket) => {
 		try {
 			const cls = await Class.findById(id).select([
 				"-students",
-				"-hasToJoin",
 				"-status",
 			]);
 
@@ -165,12 +164,30 @@ io.on("connection", (socket) => {
 		}
 	});
 
+	socket.on("markExamEnd", async (id, cb) => {
+		console.log("marking exam as ended");
+		try {
+			let cls = await Class.findById(id);
+			cls.hasToJoin = 0;
+			cls.status = "Finished";
+			cls.students = [];
+			await cls.save();
+
+			checkAllClass(socket);
+			cb();
+		} catch (err) {
+			console.log(err);
+		}
+	});
+
 	socket.on("newClassStarted", async (stdId, clsId) => {
 		try {
 			let cls = await Class.findById(clsId).select([
 				"_id",
 				"subject",
 				"teacher",
+				"classDuration",
+				"roleplayer",
 			]);
 			let std = await User.findById(stdId).select(["name"]);
 			let state = {
@@ -184,6 +201,8 @@ io.on("connection", (socket) => {
 					name: std.name,
 					_id: std._id,
 				},
+				startTime: new Date().toUTCString(),
+				duration: cls.classDuration,
 			};
 			studentsStates[stdId] = state;
 			console.log(studentsStates);
@@ -191,6 +210,15 @@ io.on("connection", (socket) => {
 		} catch (err) {
 			console.log(err);
 		}
+	});
+
+	// ===========
+	//  candidate
+	// =============
+
+	socket.on("getStudentExamState", (stdId, cb) => {
+		let state = studentsStates[stdId];
+		cb(state);
 	});
 
 	// ===========
