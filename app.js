@@ -9,7 +9,8 @@ const PORT = process.env.PORT || 5000;
 const io = require("socket.io")(server, {
 	cors: {
 		// origin: "http://localhost:3000",
-		origin: "https://live-video-class.netlify.app",
+		// origin: "https://live-video-class.netlify.app",
+		origin: "https://rfatutors-osler.app",
 		methods: ["GET", "POST"],
 	},
 });
@@ -21,6 +22,7 @@ const Class = require("./models/class");
 // cors
 const whitelist = [
 	"http://localhost:3000",
+	"https://rfatutors-osler.app",
 	"https://live-video-class.netlify.app",
 ];
 const corsOptions = {
@@ -61,13 +63,52 @@ app.use("/teacher", teacher);
 app.use("/student", student);
 app.use("/roleplayer", roleplayer);
 
+// importing watcher class
+const Watcher = require("./watcher");
+
 // class & students socket id with their own id
 const users = {};
 let studentsStates = {};
 
+let watcher;
+
 // socket handler
 io.on("connection", (socket) => {
 	console.log("new connection");
+
+	socket.on("getClsId", async (id, cb) => {
+		if (watcher) {
+			let clsId = await watcher.getId(id);
+			cb(clsId);
+		} else {
+			let classes = await Class.find({
+				status: "Not Started",
+			});
+			if (classes.length != 0) {
+				cb(null, true);
+			} else {
+				cb(null, null, true);
+			}
+			console.log("no watcher");
+		}
+	});
+
+	socket.on("markedTaken", async (index, clsId, cb) => {
+		try {
+			let cls = await Class.findById(clsId);
+			if (cls.students[index]) {
+				console.log(cls.students[index], " marked as taken");
+				cls.students.splice(index, 1);
+				cls.hasToJoin--;
+				await cls.save();
+				cb();
+			} else {
+				cb();
+			}
+		} catch (err) {
+			console.log("err on gettting cls : ", err);
+		}
+	});
 
 	socket.on("disconnect", () => {
 		socket.broadcast.emit("callEnded");
@@ -107,6 +148,7 @@ io.on("connection", (socket) => {
 	socket.on("startClasses", async (cb) => {
 		console.log("starting cls");
 		socket.broadcast.emit("startClass");
+		startWatcher();
 		cb("Classes has been started", "");
 	});
 
@@ -125,8 +167,9 @@ io.on("connection", (socket) => {
 			cls.students = stds;
 			cls.hasToJoin--;
 
-			if (cls.hasToJoin === 0) {
+			if (cls.hasToJoin === 0 || cls.hasToJoin < 0) {
 				cls.status = "Finished";
+
 				io.to(users[cls.teacher._id]).emit(
 					"allClassEnd",
 					"No More Class (:"
@@ -165,7 +208,7 @@ io.on("connection", (socket) => {
 	});
 
 	socket.on("markExamEnd", async (id, cb) => {
-		console.log("marking exam as ended");
+		// console.log("marking exam as ended");
 		try {
 			let cls = await Class.findById(id);
 			cls.hasToJoin = 0;
@@ -193,7 +236,6 @@ io.on("connection", (socket) => {
 			let state = {
 				cls: {
 					_id: cls._id,
-					subject: cls.subject,
 					teacher: cls.teacher.name,
 					roleplayer: cls?.roleplayer?.name,
 				},
@@ -205,7 +247,7 @@ io.on("connection", (socket) => {
 				duration: cls.classDuration,
 			};
 			studentsStates[stdId] = state;
-			console.log(studentsStates);
+			// console.log(studentsStates);
 			socket.broadcast.emit("studentsStates", studentsStates);
 		} catch (err) {
 			console.log(err);
@@ -270,7 +312,7 @@ io.on("connection", (socket) => {
 					"-_id",
 				]);
 				let firstExamId = cls?.students?.indexOf(user?.id);
-				console.log(classes, firstExamId);
+				// console.log(classes, firstExamId);
 
 				cb(false, classes[firstExamId]?._id.toString());
 			} else if (
@@ -282,11 +324,11 @@ io.on("connection", (socket) => {
 					status: "Not Started",
 				};
 				let exam = await Class.find(query).select(["_id"]);
-				console.log(exam);
+				// console.log(exam);
 				cb(false, exam[0]?._id?.toString());
 			}
 		} catch (err) {
-			console.log(err);
+			// console.log(err);
 			cb(true);
 		}
 	});
@@ -299,8 +341,8 @@ app.get("/", (req, res) => {
 });
 
 app.post("/get-exam-id", async (req, res) => {
-	console.log(req.body);
-	console.log("htting route");
+	// console.log(req.body);
+	// console.log("htting route");
 
 	let user = req.body;
 	try {
@@ -315,7 +357,7 @@ app.post("/get-exam-id", async (req, res) => {
 				"-_id",
 			]);
 			let firstExamId = cls?.students?.indexOf(user?.id);
-			console.log(classes, firstExamId);
+			// console.log(classes, firstExamId);
 
 			res.status(200).send({
 				id: classes[firstExamId]?._id.toString(),
@@ -326,14 +368,13 @@ app.post("/get-exam-id", async (req, res) => {
 				status: "Not Started",
 			};
 			let exam = await Class.find(query).select(["_id"]);
-			console.log(exam);
+			// console.log(exam);
 
 			res.status(200).send({
 				id: exam[0]?._id?.toString(),
 			});
 		}
 	} catch (err) {
-		console.log(err);
 		res.status(500).json({
 			message: "Error getting user",
 			err,
@@ -353,7 +394,6 @@ app.get("/get-user-details", auth, async (req, res) => {
 			user,
 		});
 	} catch (err) {
-		console.log(err);
 		res.status(500).json({
 			message: "Error getting user",
 			err,
@@ -370,7 +410,6 @@ app.put("/update-user-details", auth, async (req, res) => {
 			message: "Profile updated",
 		});
 	} catch (err) {
-		// console.log(err);
 		res.status(500).json({
 			message: "Error updating profile",
 			err,
@@ -395,7 +434,6 @@ app.get("/get-start-time", async (req, res) => {
 			});
 		}
 	} catch (err) {
-		// console.log(err);
 		res.status(500).json({
 			message: "Error updating profile",
 			err,
@@ -420,13 +458,32 @@ const checkAllClass = async (socket) => {
 			status: "Not Started",
 		});
 		if (classes.length === 0) {
+			watcher = null;
+			console.log("stoping watcher");
 			socket.broadcast.emit("allClsTaken");
 			studentsStates = {};
 		}
-		// console.log("classes", classes);
 	} catch (err) {
 		console.log(err);
 	}
+};
+
+const startWatcher = async () => {
+	let cls = await Class.find({
+		status: "Not Started",
+	});
+	let classes = await Class.find({
+		status: "Not Started",
+	}).select(["_id"]);
+
+	let clsIds = classes?.map((item) => item._id.toString());
+	let stdIds = cls[0].students;
+	let clsDuration = cls[0].classDuration;
+	let dBC = 0.5; // delay between classes (30s)
+	console.log("starting watcher");
+	watcher = new Watcher(clsIds, stdIds, clsDuration, dBC);
+
+	console.log(watcher);
 };
 
 // server listening
