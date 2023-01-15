@@ -175,6 +175,32 @@ router.delete("/delete-class", async (req, res) => {
 	}
 });
 
+// renewing exam
+
+router.get("/renew-exams", auth, async (req, res) => {
+	try {
+		let exams = await Class.updateMany(
+			{
+				status: "Finished",
+			},
+			{
+				hasToJoin: 0,
+				students: [],
+			}
+		);
+		console.log(exams);
+		res.status(200).send({
+			// exams: exams,
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).json({
+			message: "Error deleteing exam",
+			err,
+		});
+	}
+});
+
 module.exports = router;
 
 const getRoles = async (req, res, role) => {
