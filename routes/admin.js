@@ -179,23 +179,30 @@ router.delete("/delete-class", async (req, res) => {
 
 router.get("/renew-exams", auth, async (req, res) => {
 	try {
-		let exams = await Class.updateMany(
+		await User.deleteMany({
+			type: "student",
+		});
+		await Class.updateMany(
 			{
 				status: "Finished",
 			},
 			{
+				status: "Not Started",
 				hasToJoin: 0,
 				students: [],
 			}
 		);
-		console.log(exams);
+		let exams = await Class.find({
+			status: "Not Started",
+		});
+
 		res.status(200).send({
-			// exams: exams,
+			exams: exams,
 		});
 	} catch (err) {
 		console.log(err);
 		res.status(500).json({
-			message: "Error deleteing exam",
+			message: "Error renewing exams",
 			err,
 		});
 	}
