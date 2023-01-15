@@ -21,6 +21,21 @@ router.get("/get-classes", async (req, res) => {
 	}
 });
 
+router.get("/get-exam/:id", async (req, res) => {
+	try {
+		const exam = await Class.findById(req.params.id);
+		res.status(200).send({
+			exam: exam,
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).json({
+			message: "Error getting exam",
+			err,
+		});
+	}
+});
+
 router.get("/get-teachers", async (req, res) => {
 	try {
 		const teachers = await User.find({ type: "teacher" }).select([
