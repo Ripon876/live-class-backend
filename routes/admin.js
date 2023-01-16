@@ -174,6 +174,9 @@ router.delete("/delete-class", async (req, res) => {
 	try {
 		const id = req.body.id;
 		console.log(id);
+		await User.deleteMany({
+			type: "student",
+		});
 		await Class.findByIdAndRemove(id);
 		await Mark.deleteMany({
 			"exam._id": id,

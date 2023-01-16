@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
+const Class = require("../models/class");
 
 // register endpoint
 router.post("/register", async (req, res) => {
@@ -18,13 +19,32 @@ router.post("/register", async (req, res) => {
 							password: hashedPassword,
 						});
 						user.save()
-							.then((user) => {
+							.then(async (user) => {
+								let exams = await Class.find({}).select([
+									"students",
+									"hasToJoin",
+									"-_id",
+								]);
+
+								if (exams.length > 0) {
+									exams[0].students.push(user._id);
+									exams[0].hasToJoin++;
+
+									await Class.updateMany(
+										{
+											status: "Not Started",
+										},
+										exams[0]
+									);
+								}
+
 								res.status(201).json({
 									message: "User Created Successfully",
 									user,
 								});
 							})
 							.catch((error) => {
+								console.log(error);
 								res.status(500).json({
 									message: "Error creating acount",
 									error,
@@ -37,10 +57,10 @@ router.post("/register", async (req, res) => {
 							e,
 						});
 					});
-			}else{
+			} else {
 				res.status(500).json({
-				message: "Email Exist",
-			});
+					message: "Email Exist",
+				});
 			}
 		});
 	} catch (err) {
@@ -67,7 +87,7 @@ router.post("/login", (req, res) => {
 						{
 							id: user._id,
 							email: user.email,
-							type: user.type
+							type: user.type,
 						},
 						process.env.JWT_SECRET,
 						{ expiresIn: "24h" }

@@ -79,6 +79,7 @@ io.on("connection", (socket) => {
 	socket.on("getClsId", async (id, cb) => {
 		if (watcher) {
 			let clsId = await watcher.getId(id);
+			console.log(clsId);
 			cb(clsId);
 		} else {
 			let classes = await Class.find({
@@ -93,22 +94,20 @@ io.on("connection", (socket) => {
 		}
 	});
 
-	socket.on("markedTaken", async (index, clsId, cb) => {
-		try {
-			let cls = await Class.findById(clsId);
-			if (cls.students[index]) {
-				console.log(cls.students[index], " marked as taken");
-				cls.students.splice(index, 1);
-				cls.hasToJoin--;
-				await cls.save();
-				cb();
-			} else {
-				cb();
-			}
-		} catch (err) {
-			console.log("err on gettting cls : ", err);
-		}
-	});
+	// socket.on("markedTaken", async (index, clsId, cb) => {
+	// 	try {
+	// 		let cls = await Class.findById(clsId);
+	// 		if (cls.students[index]) {
+	// 			console.log(cls.students[index], " marked as taken");
+	// 			cls.students.splice(index, 1);
+	// 			cls.hasToJoin--;
+	// 			await cls.save();
+	// 			cb();
+	// 		}  
+	// 	} catch (err) {
+	// 		console.log("err on gettting cls : ", err);
+	// 	}
+	// });
 
 	socket.on("disconnect", () => {
 		socket.broadcast.emit("callEnded");
@@ -216,7 +215,7 @@ io.on("connection", (socket) => {
 			cls.students = [];
 			await cls.save();
 
-			checkAllClass(socket);
+			// checkAllClass(socket);
 			cb();
 		} catch (err) {
 			console.log(err);
@@ -480,8 +479,9 @@ const startWatcher = async () => {
 	let stdIds = cls[0].students;
 	let clsDuration = cls[0].classDuration;
 	let dBC = 0.5; // delay between classes (30s)
+	let totalExams = cls[0]?.hasToJoin;
 	console.log("starting watcher");
-	watcher = new Watcher(clsIds, stdIds, clsDuration, dBC);
+	watcher = new Watcher(clsIds, stdIds, clsDuration, dBC, totalExams);
 
 	console.log(watcher);
 };
