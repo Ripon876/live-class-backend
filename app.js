@@ -8,9 +8,9 @@ const PORT = process.env.PORT || 5000;
 // socket server
 const io = require("socket.io")(server, {
 	cors: {
-		origin: "http://localhost:3000",
+		// origin: "http://localhost:3000",
 		// origin: "https://live-video-class.netlify.app",
-		// origin: "https://rfatutors-osler.app",
+		origin: "https://rfatutors-osler.app",
 		methods: ["GET", "POST"],
 	},
 });
@@ -71,33 +71,29 @@ const users = {};
 let studentsStates = {};
 
 let watcher;
-
+let skt;
 // socket handler
 io.on("connection", (socket) => {
 	console.log("new connection");
 
-	socket.on("getClsId", async (id, cb) => {
-		if (watcher) {
-			let clsId = await watcher.getId(id);
-			console.log(clsId);
-			cb(clsId);
-		} else {
-			let classes = await Class.find({
-				status: "Not Started",
-			});
-			if (classes.length != 0) {
-				cb(null, true);
-			} else {
-				cb(null, null, true);
-			}
-			console.log("no watcher");
-		}
-	});
-
-	socket.on("breakTime", () => {
-		console.log('break time')
-		socket.broadcast.emit("breakTime");
-	});
+	skt = socket;
+	// socket.on("getClsId", async (id, cb) => {
+	// 	if (watcher) {
+	// 		let clsId = await watcher.getId(id);
+	// 		console.log(clsId);
+	// 		cb(clsId);
+	// 	} else {
+	// 		let classes = await Class.find({
+	// 			status: "Not Started",
+	// 		});
+	// 		if (classes.length != 0) {
+	// 			cb(null, true);
+	// 		} else {
+	// 			cb(null, null, true);
+	// 		}
+	// 		console.log("no watcher");
+	// 	}
+	// });
 
 	// socket.on("markedTaken", async (index, clsId, cb) => {
 	// 	try {
@@ -171,8 +167,16 @@ io.on("connection", (socket) => {
 			cls.students = stds;
 			cls.hasToJoin--;
 
+			let isBreak = watcher && (await watcher.isBreak(cls.hasToJoin));
+
+			if (isBreak) {
+				console.log("break time");
+				socket.broadcast.emit("breakTime");
+			}
+
 			if (cls.hasToJoin === 0 || cls.hasToJoin < 0) {
 				cls.status = "Finished";
+				cls.hasToJoin = 0;
 
 				io.to(users[cls.teacher._id]).emit(
 					"allClassEnd",
@@ -196,10 +200,7 @@ io.on("connection", (socket) => {
 			}).distinct("_id");
 
 			if (classes.length > 0) {
-				cb({
-					type: "joinNextClass",
-					id: classes[0],
-				});
+				cb({ break: isBreak, type: "joinNextClass", id: classes[0] });
 			} else {
 				cb({
 					type: "allClassEnd",
@@ -211,21 +212,21 @@ io.on("connection", (socket) => {
 		}
 	});
 
-	socket.on("markExamEnd", async (id, cb) => {
-		// console.log("marking exam as ended");
-		try {
-			let cls = await Class.findById(id);
-			cls.hasToJoin = 0;
-			cls.status = "Finished";
-			cls.students = [];
-			await cls.save();
+	// socket.on("markExamEnd", async (id, cb) => {
+	// 	// console.log("marking exam as ended");
+	// 	try {
+	// 		let cls = await Class.findById(id);
+	// 		cls.hasToJoin = 0;
+	// 		cls.status = "Finished";
+	// 		cls.students = [];
+	// 		await cls.save();
 
-			// checkAllClass(socket);
-			cb();
-		} catch (err) {
-			console.log(err);
-		}
-	});
+	// 		// checkAllClass(socket);
+	// 		cb();
+	// 	} catch (err) {
+	// 		console.log(err);
+	// 	}
+	// });
 
 	socket.on("newClassStarted", async (stdId, clsId) => {
 		try {

@@ -87,6 +87,17 @@ class Watcher {
 			};
 		}
 	}
+
+	async isBreak(count) {
+		console.log("is break called");
+		if (count === this.breakIn) {
+			console.log(count, this.breakIn, true);
+			return true;
+		} else {
+			console.log(count, this.breakIn, false);
+			return false;
+		}
+	}
 }
 
 module.exports = Watcher;
