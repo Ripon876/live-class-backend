@@ -13,79 +13,40 @@ class Watcher {
 		let index = this.stdIds.indexOf(id);
 
 		// calculate elapsed time since class / exam started
-		var endTime = new Date();
-		var timeDiff = (endTime - this.startTime) / 1000;
-		let elapsedTime = timeDiff / 60;
+		let elapsedTime = await this.getElapsedTime(this.startTime);
 
 		// create temp array of classes for current std
-		let ids = [...this.clsIds];
-		let firstHalf = ids.splice(index);
-		let tempClsIds = [...firstHalf, ...ids];
+		let tempClsIds = await this.getTempClsIds(this.clsIds, index);
 
-		if (elapsedTime < this.breakStart || elapsedTime == this.breakStart) {
-			// find class index
-			let clsIndex = Math.floor(elapsedTime / this.clsDuration);
-
-			// calculate total time for current number of classes
-			let totalTime = (clsIndex + 1) * this.clsDuration;
-			console.log("--------------------------");
-			console.log("totalTime (", clsIndex + 1, ") :", totalTime);
-			console.log("elapsedTime : ", elapsedTime.toFixed(2));
-			console.log("--------------------------");
-
-			// if id found send that or
-			// (id not found mean class total time exceded) send cls end
-			if (tempClsIds[clsIndex]) {
-				return {
-					canJoin: true,
-					id: tempClsIds[clsIndex],
-					timeLeft: totalTime - elapsedTime.toFixed(2),
-				};
-			} else {
-				return {
-					canJoin: false,
-				};
-			}
-		} else if (
-			elapsedTime > this.breakEnd ||
-			elapsedTime == this.breakEnd
-		) {
-			// find class index
-			let clsIndex = Math.floor(
-				(elapsedTime - (this.clsDuration - 0.5)) / this.clsDuration
-			);
-
-			// calculate total time for current number of classes
-			let totalTime = (clsIndex + 1) * this.clsDuration;
-			console.log("--------------------------");
-			console.log("totalTime (", clsIndex + 1, ") :", totalTime);
-			console.log("elapsedTime (with break): ", elapsedTime.toFixed(2));
-			console.log("--------------------------");
-
-			// if id found send that or
-			// (id not found mean class total time exceded) send cls end
-			if (tempClsIds[clsIndex]) {
-				return {
-					canJoin: true,
-					id: tempClsIds[clsIndex],
-					timeLeft:
-						totalTime -
-						(elapsedTime - (this.clsDuration - 0.5)).toFixed(2),
-				};
-			} else {
-				return {
-					canJoin: false,
-				};
-			}
-		} else if (
-			elapsedTime > this.breakStart ||
-			elapsedTime < this.breakEnd
-		) {
+		if ((await this.breakTime(elapsedTime)) == "No Break") {
+			return await this.findId(elapsedTime, tempClsIds);
+		} else if ((await this.breakTime(elapsedTime)) == "Finished") {
+			return await this.findId(elapsedTime, tempClsIds, true);
+		} else if ((await this.breakTime(elapsedTime)) == "Break") {
 			return {
 				canJoin: false,
 				break: true,
 			};
 		}
+	}
+
+	async breakTime(e) {
+		if (this.breakIn > 1 || this.breakIn == 1) {
+			if (
+				e > this.breakStart ||
+				e < this.breakEnd ||
+				e === this.breakStart ||
+				e === this.breakEnd
+			) {
+				return "Break";
+			} else if (e < this.breakStart) {
+				return "No Break";
+			} else if (e > this.breakEnd) {
+				return "Finished";
+			}
+		}
+
+		return "No Break";
 	}
 
 	async isBreak(count) {
@@ -96,6 +57,46 @@ class Watcher {
 		} else {
 			console.log(count, this.breakIn, false);
 			return false;
+		}
+	}
+	async getTempClsIds(clsids, i) {
+		let ids = [...clsids];
+		let firstHalf = ids.splice(i);
+		return [...firstHalf, ...ids];
+	}
+	async getElapsedTime(st) {
+		var endTime = new Date();
+		var timeDiff = (endTime - st) / 1000;
+		return timeDiff / 60;
+	}
+
+	async findId(e, tmpcls, isB) {
+		if (isB) {
+			e = e - (this.clsDuration - 0.5);
+		}
+
+		let clsIndex = Math.floor(e / this.clsDuration);
+		let totalTime = (clsIndex + 1) * this.clsDuration;
+		console.log("--------------------------");
+		console.log("totalTime (", clsIndex + 1, ") :", totalTime);
+		if (isB) {
+			console.log("elapsedTime : (without break) ", e.toFixed(2));
+		} else {
+			console.log("elapsedTime : ", e.toFixed(2));
+		}
+
+		console.log("--------------------------");
+
+		if (tmpcls[clsIndex]) {
+			return {
+				canJoin: true,
+				id: tmpcls[clsIndex],
+				timeLeft: totalTime - e.toFixed(2),
+			};
+		} else {
+			return {
+				canJoin: false,
+			};
 		}
 	}
 }

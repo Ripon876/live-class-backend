@@ -77,23 +77,23 @@ io.on("connection", (socket) => {
 	console.log("new connection");
 
 	 
-	// socket.on("getClsId", async (id, cb) => {
-	// 	if (watcher) {
-	// 		let clsId = await watcher.getId(id);
-	// 		console.log(clsId);
-	// 		cb(clsId);
-	// 	} else {
-	// 		let classes = await Class.find({
-	// 			status: "Not Started",
-	// 		});
-	// 		if (classes.length != 0) {
-	// 			cb(null, true);
-	// 		} else {
-	// 			cb(null, null, true);
-	// 		}
-	// 		console.log("no watcher");
-	// 	}
-	// });
+	socket.on("getClsId", async (id, cb) => {
+		if (watcher) {
+			let clsId = await watcher.getId(id);
+			console.log(clsId);
+			cb(clsId);
+		} else {
+			let classes = await Class.find({
+				status: "Not Started",
+			});
+			if (classes.length != 0) {
+				cb(null, true);
+			} else {
+				cb(null, null, true);
+			}
+			console.log("no watcher");
+		}
+	});
 
 	socket.on("disconnect", () => {
 		// socket.broadcast.emit("callEnded");
@@ -491,6 +491,8 @@ const startWatcher = async () => {
 
 	console.log(watcher);
 };
+
+ 
 
 // server listening
 server.listen(PORT, () => console.log("server is running on port ", PORT));
