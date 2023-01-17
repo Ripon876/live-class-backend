@@ -8,9 +8,9 @@ const PORT = process.env.PORT || 5000;
 // socket server
 const io = require("socket.io")(server, {
 	cors: {
-		// origin: "http://localhost:3000",
+		origin: "http://localhost:3000",
 		// origin: "https://live-video-class.netlify.app",
-		origin: "https://rfatutors-osler.app",
+		// origin: "https://rfatutors-osler.app",
 		methods: ["GET", "POST"],
 	},
 });
@@ -166,12 +166,15 @@ io.on("connection", (socket) => {
 			stds?.splice(stdIndex, 1);
 			cls.students = stds;
 			cls.hasToJoin--;
+			if (cls.hasToJoin > 0) {
+				let isBreak = watcher && (await watcher.isBreak(cls.hasToJoin));
 
-			let isBreak = watcher && (await watcher.isBreak(cls.hasToJoin));
-
-			if (isBreak) {
-				console.log("break time");
-				socket.broadcast.emit("breakTime");
+				if (isBreak) {
+					console.log("break time");
+					socket.broadcast.emit("breakTime");
+				}
+			} else {
+				let isBreak = false;
 			}
 
 			if (cls.hasToJoin === 0 || cls.hasToJoin < 0) {
