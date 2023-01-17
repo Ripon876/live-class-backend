@@ -8,9 +8,9 @@ const PORT = process.env.PORT || 5000;
 // socket server
 const io = require("socket.io")(server, {
 	cors: {
-		origin: "http://localhost:3000",
+		// origin: "http://localhost:3000",
 		// origin: "https://live-video-class.netlify.app",
-		// origin: "https://rfatutors-osler.app",
+		origin: "https://rfatutors-osler.app",
 		methods: ["GET", "POST"],
 	},
 });
@@ -71,12 +71,12 @@ const users = {};
 let studentsStates = {};
 
 let watcher;
-let skt;
+ 
 // socket handler
 io.on("connection", (socket) => {
 	console.log("new connection");
 
-	skt = socket;
+	 
 	// socket.on("getClsId", async (id, cb) => {
 	// 	if (watcher) {
 	// 		let clsId = await watcher.getId(id);
@@ -95,23 +95,18 @@ io.on("connection", (socket) => {
 	// 	}
 	// });
 
-	// socket.on("markedTaken", async (index, clsId, cb) => {
-	// 	try {
-	// 		let cls = await Class.findById(clsId);
-	// 		if (cls.students[index]) {
-	// 			console.log(cls.students[index], " marked as taken");
-	// 			cls.students.splice(index, 1);
-	// 			cls.hasToJoin--;
-	// 			await cls.save();
-	// 			cb();
-	// 		}
-	// 	} catch (err) {
-	// 		console.log("err on gettting cls : ", err);
-	// 	}
-	// });
-
 	socket.on("disconnect", () => {
-		socket.broadcast.emit("callEnded");
+		// socket.broadcast.emit("callEnded");
+		console.log(socket.id);
+		let user = Object.keys(users).find((key) => users[key] === socket.id);
+		console.log(user);
+
+		if (user in studentsStates) {
+			console.log(user, " : just disconnected");
+console.log(studentsStates[user])
+			io.to(users[studentsStates[user].cls.t_id]).emit("stdDisconnected", user);
+			
+		}
 	});
 
 	socket.on("setActive", async (data) => {
@@ -245,6 +240,8 @@ io.on("connection", (socket) => {
 				cls: {
 					_id: cls._id,
 					teacher: cls.teacher.name,
+					t_id: cls.teacher._id,
+					r_id: cls?.roleplayer?._id,
 					roleplayer: cls?.roleplayer?.name,
 				},
 				student: {
