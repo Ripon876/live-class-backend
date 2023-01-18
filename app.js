@@ -96,14 +96,14 @@ io.on("connection", (socket) => {
 
 	socket.on("disconnect", () => {
 		// socket.broadcast.emit("callEnded");
-		console.log(socket.id);
-		console.log(users);
+		// console.log(socket.id);
+		// console.log(users);
 		let user = Object.keys(users).find((key) => users[key] === socket.id);
-		console.log("disconnected : ", user);
+		// console.log("disconnected : ", user);
 
 		if (user in studentsStates) {
-			console.log(user, " : just disconnected");
-			console.log(studentsStates[user]);
+			// console.log(user, " : just disconnected");
+			// console.log(studentsStates[user]);
 			io.to(users[studentsStates[user].cls.t_id]).emit(
 				"stdDisconnected",
 				user
@@ -122,13 +122,13 @@ io.on("connection", (socket) => {
 			);
 
 			if (s1) {
-				console.log(s1);
-				console.log("teacher disconnected", user);
+				// console.log(s1);
+				// console.log("teacher disconnected", user);
 				io.to(users[s1]).emit("exDisconnected", user);
 			}
 			if (s2) {
-				console.log(s2);
-				console.log("roleplayer disconnected", user);
+				// console.log(s2);
+				// console.log("roleplayer disconnected", user);
 				io.to(users[s2]).emit("roDisconnected", user);
 			}
 		}
@@ -180,8 +180,8 @@ io.on("connection", (socket) => {
 			startWatcher();
 			cb("Classes has been started", "");
 		} else {
-	  console.log('not equal');
-				cb("", "Number of Exams & Candidates are not equal");
+			console.log("not equal");
+			cb("", "Number of Exams & Candidates are not equal");
 		}
 	});
 
