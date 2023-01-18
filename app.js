@@ -71,12 +71,11 @@ const users = {};
 let studentsStates = {};
 
 let watcher;
- 
+
 // socket handler
 io.on("connection", (socket) => {
 	console.log("new connection");
 
-	 
 	socket.on("getClsId", async (id, cb) => {
 		if (watcher) {
 			let clsId = await watcher.getId(id);
@@ -103,9 +102,15 @@ io.on("connection", (socket) => {
 
 		if (user in studentsStates) {
 			console.log(user, " : just disconnected");
-console.log(studentsStates[user])
-			io.to(users[studentsStates[user].cls.t_id]).emit("stdDisconnected", user);
-			
+			console.log(studentsStates[user]);
+			io.to(users[studentsStates[user].cls.t_id]).emit(
+				"stdDisconnected",
+				user
+			);
+			io.to(users[studentsStates[user].cls?.r_id]).emit(
+				"stdDisconnected",
+				user
+			);
 		}
 	});
 
@@ -491,8 +496,6 @@ const startWatcher = async () => {
 
 	console.log(watcher);
 };
-
- 
 
 // server listening
 server.listen(PORT, () => console.log("server is running on port ", PORT));
