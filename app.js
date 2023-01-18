@@ -8,9 +8,9 @@ const PORT = process.env.PORT || 5000;
 // socket server
 const io = require("socket.io")(server, {
 	cors: {
-		// origin: "http://localhost:3000",
+		origin: "http://localhost:3000",
 		// origin: "https://live-video-class.netlify.app",
-		origin: "https://rfatutors-osler.app",
+		// origin: "https://rfatutors-osler.app",
 		methods: ["GET", "POST"],
 	},
 });
@@ -97,8 +97,9 @@ io.on("connection", (socket) => {
 	socket.on("disconnect", () => {
 		// socket.broadcast.emit("callEnded");
 		console.log(socket.id);
+		console.log(users);
 		let user = Object.keys(users).find((key) => users[key] === socket.id);
-		console.log(user);
+		console.log("disconnected : ", user);
 
 		if (user in studentsStates) {
 			console.log(user, " : just disconnected");
@@ -111,6 +112,25 @@ io.on("connection", (socket) => {
 				"stdDisconnected",
 				user
 			);
+		}
+		if (user) {
+			let s1 = Object.keys(studentsStates).find(
+				(key) => studentsStates[key].cls?.t_id === user
+			);
+			let s2 = Object.keys(studentsStates).find(
+				(key) => studentsStates[key].cls?.r_id === user
+			);
+
+			if (s1) {
+				console.log(s1);
+				console.log("teacher disconnected", user);
+				io.to(users[s1]).emit("exDisconnected", user);
+			}
+			if (s2) {
+				console.log(s2);
+				console.log("roleplayer disconnected", user);
+				io.to(users[s2]).emit("roDisconnected", user);
+			}
 		}
 	});
 
