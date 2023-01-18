@@ -23,6 +23,7 @@ class Watcher {
 		} else if ((await this.breakTime(elapsedTime)) == "Finished") {
 			return await this.findId(elapsedTime, tempClsIds, true);
 		} else if ((await this.breakTime(elapsedTime)) == "Break") {
+			console.log(elapsedTime);
 			return {
 				canJoin: false,
 				break: true,
@@ -32,17 +33,17 @@ class Watcher {
 
 	async breakTime(e) {
 		if (this.breakIn > 1 || this.breakIn == 1) {
-			if (
+			if (e < this.breakStart) {
+				return "No Break";
+			} else if (e > this.breakEnd) {
+				return "Finished";
+			} else if (
 				e > this.breakStart ||
 				e < this.breakEnd ||
 				e === this.breakStart ||
 				e === this.breakEnd
 			) {
 				return "Break";
-			} else if (e < this.breakStart) {
-				return "No Break";
-			} else if (e > this.breakEnd) {
-				return "Finished";
 			}
 		}
 

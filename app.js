@@ -8,9 +8,9 @@ const PORT = process.env.PORT || 5000;
 // socket server
 const io = require("socket.io")(server, {
 	cors: {
-		origin: "http://localhost:3000",
+		// origin: "http://localhost:3000",
 		// origin: "https://live-video-class.netlify.app",
-		// origin: "https://rfatutors-osler.app",
+		origin: "https://rfatutors-osler.app",
 		methods: ["GET", "POST"],
 	},
 });
@@ -186,21 +186,31 @@ io.on("connection", (socket) => {
 			stds?.splice(stdIndex, 1);
 			cls.students = stds;
 			cls.hasToJoin--;
+			let isBreak = false;
 			if (cls.hasToJoin > 0) {
-				let isBreak = watcher && (await watcher.isBreak(cls.hasToJoin));
+				isBreak = watcher && (await watcher.isBreak(cls.hasToJoin));
 
 				if (isBreak) {
 					console.log("break time");
 					socket.broadcast.emit("breakTime");
 				}
 			} else {
-				let isBreak = false;
+				isBreak = false;
 			}
 
 			if (cls.hasToJoin === 0 || cls.hasToJoin < 0) {
 				cls.status = "Finished";
 				cls.hasToJoin = 0;
 
+				socket.broadcast.emit("allClassEnd", "No More Class (:");
+				await Class.updateMany(
+					{},
+					{
+						status: "Finished",
+						hasToJoin: 0,
+						students: [],
+					}
+				);
 				io.to(users[cls.teacher._id]).emit(
 					"allClassEnd",
 					"No More Class (:"
@@ -225,10 +235,22 @@ io.on("connection", (socket) => {
 			if (classes.length > 0) {
 				cb({ break: isBreak, type: "joinNextClass", id: classes[0] });
 			} else {
+				socket.broadcast.emit("allClassEnd", "No More Class (:");
+
+				await Class.updateMany(
+					{},
+					{
+						status: "Finished",
+						hasToJoin: 0,
+						students: [],
+					}
+				);
+
 				cb({
 					type: "allClassEnd",
 					text: "No More Class (:",
 				});
+				checkAllClass(socket);
 			}
 		} catch (err) {
 			console.log(err);
@@ -305,6 +327,11 @@ io.on("connection", (socket) => {
 		// console.log('adding with roleplayer')
 		let exam = await Class.findById(clsId).select(["roleplayer"]);
 		io.to(users[exam.roleplayer._id]).emit("joinCandidate", stdId);
+	});
+
+	socket.on("reConnectWithRp", async (clsId) => {
+		let cls = await Class.findById(clsId).select(["-_id", "teacher"]);
+		io.to(users[cls.teacher._id]).emit("connectWithRp");
 	});
 
 	// ===========
