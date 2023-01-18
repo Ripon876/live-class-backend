@@ -167,9 +167,22 @@ io.on("connection", (socket) => {
 
 	socket.on("startClasses", async (cb) => {
 		console.log("starting cls");
-		socket.broadcast.emit("startClass");
-		startWatcher();
-		cb("Classes has been started", "");
+
+		let ems = await Class.find({
+			status: "Not Started",
+		});
+		let cds = await User.find({
+			type: "student",
+		});
+
+		if (ems.length === cds.length) {
+			socket.broadcast.emit("startClass");
+			startWatcher();
+			cb("Classes has been started", "");
+		} else {
+	  console.log('not equal');
+				cb("", "Number of Exams & Candidates are not equal");
+		}
 	});
 
 	socket.on("clsEnd", async (data, cb) => {
