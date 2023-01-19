@@ -178,7 +178,7 @@ io.on("connection", (socket) => {
 		if (ems.length === cds.length) {
 			socket.broadcast.emit("startClass");
 			startWatcher();
-			cb("Classes has been started", "");
+			cb("Exams has been started", "");
 		} else {
 			console.log("not equal");
 			cb("", "Number of Exams & Candidates are not equal");
