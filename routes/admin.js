@@ -9,7 +9,7 @@ const Mark = require("../models/mark");
 router.get("/get-classes", async (req, res) => {
 	try {
 		const classes = await Class.find({});
-	
+
 		res.status(200).send({
 			classes: classes,
 		});
@@ -151,7 +151,6 @@ router.post("/create-new-class", auth, async (req, res) => {
 	try {
 		// const students = await User.find({ type: "student" }).select(['_id']);
 		const students = await User.find({ type: "student" }).distinct("_id");
- 
 
 		const newClass = await new Class(req.body);
 		newClass.hasToJoin = students.length;
@@ -219,9 +218,16 @@ router.get("/renew-exams", auth, async (req, res) => {
 			status: "Not Started",
 		});
 
-		res.status(200).send({
-			exams: exams,
-		});
+		if (exams.length === 0) {
+			res.status(500).json({
+				message: "Don't have exam to renew",
+			});
+			return;
+		} else {
+			res.status(200).send({
+				exams: exams,
+			});
+		}
 	} catch (err) {
 		console.log(err);
 		res.status(500).json({
