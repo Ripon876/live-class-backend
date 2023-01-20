@@ -7,10 +7,11 @@ const Mark = require("../models/mark");
 // sending all class data
 router.get("/get-classes", auth, async (req, res) => {
 	try {
+		const dsfds = await Class.find({});
 		const classes = await Class.find({
 			hasToJoin: { $gt: 0 },
 		}).select(["-students"]);
-
+	 
 		let teacherClasses = classes.filter(
 			(cla) => cla.teacher._id === req.user.id
 		);

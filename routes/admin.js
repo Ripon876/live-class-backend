@@ -9,13 +9,14 @@ const Mark = require("../models/mark");
 router.get("/get-classes", async (req, res) => {
 	try {
 		const classes = await Class.find({});
+	
 		res.status(200).send({
 			classes: classes,
 		});
 	} catch (err) {
 		console.log(err);
 		res.status(500).json({
-			message: "Error creating acount",
+			message: "Error getting acount",
 			err,
 		});
 	}
@@ -150,6 +151,7 @@ router.post("/create-new-class", auth, async (req, res) => {
 	try {
 		// const students = await User.find({ type: "student" }).select(['_id']);
 		const students = await User.find({ type: "student" }).distinct("_id");
+ 
 
 		const newClass = await new Class(req.body);
 		newClass.hasToJoin = students.length;
@@ -197,6 +199,8 @@ router.delete("/delete-class", async (req, res) => {
 
 router.get("/renew-exams", auth, async (req, res) => {
 	try {
+		console.log("New exams start time :", req.query.time);
+
 		await User.deleteMany({
 			type: "student",
 		});
@@ -205,6 +209,7 @@ router.get("/renew-exams", auth, async (req, res) => {
 				status: "Finished",
 			},
 			{
+				startTime: req.query.time,
 				status: "Not Started",
 				hasToJoin: 0,
 				students: [],
