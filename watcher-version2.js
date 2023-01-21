@@ -51,8 +51,9 @@ class Watcher_V2 {
 			this.states[exam._id] = {
 				ex: exam.teacher._id,
 				cd: tempId,
+				st: Date.now(),
 			};
-			console.log("students: ", exam.students, "exam no: ", index + 1);
+			// console.log("students: ", exam.students, "exam no: ", index + 1);
 		});
 
 		console.log(this.states);
@@ -73,6 +74,7 @@ class Watcher_V2 {
 			this.states[exam._id] = {
 				ex: exam.teacher._id,
 				cd: "",
+				st: "",
 			};
 			// console.log("students: ", exam.students, "exam no: ", index + 1);
 		});
