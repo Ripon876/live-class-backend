@@ -8,9 +8,9 @@ const PORT = process.env.PORT || 5000;
 // socket server
 const io = require("socket.io")(server, {
 	cors: {
-		// origin: "http://localhost:3000",
+		origin: "http://localhost:3000",
 		// origin: "https://live-video-class.netlify.app",
-		origin: "https://rfatutors-osler.app",
+		// origin: "https://rfatutors-osler.app",
 		methods: ["GET", "POST"],
 	},
 });
@@ -71,39 +71,24 @@ const users = {};
 let studentsStates = {};
 
 let watcher;
+let roomId = "sdfdsj23432dfdfgfd";
 
 // socket handler
 io.on("connection", (socket) => {
 	console.log("new connection");
+	socket.on("setActive", async (data) => {
+		socket.join(data?.id);
 
-	socket.on("getClsId", async (id, cb) => {
+		users[data?.id] = socket.id;
 		if (watcher) {
-			let clsId = await watcher.getId(id);
-			console.log(clsId);
-			cb(clsId);
-		} else {
-			let classes = await Class.find({
-				status: "Not Started",
-			});
-			if (classes.length != 0) {
-				cb(null, true);
-			} else {
-				cb(null, null, true);
-			}
-			console.log("no watcher");
+			watcher.updateUsers(users);
 		}
-	});
-
-	socket.on("disconnect", () => {
-		// socket.broadcast.emit("callEnded");
-		// console.log(socket.id);
 		// console.log(users);
+	});
+	socket.on("disconnect", () => {
 		let user = Object.keys(users).find((key) => users[key] === socket.id);
-		// console.log("disconnected : ", user);
 
 		if (user in studentsStates) {
-			// console.log(user, " : just disconnected");
-			// console.log(studentsStates[user]);
 			io.to(users[studentsStates[user].cls.t_id]).emit(
 				"stdDisconnected",
 				user
@@ -122,21 +107,12 @@ io.on("connection", (socket) => {
 			);
 
 			if (s1) {
-				// console.log(s1);
-				// console.log("teacher disconnected", user);
 				io.to(users[s1]).emit("exDisconnected", user);
 			}
 			if (s2) {
-				// console.log(s2);
-				// console.log("roleplayer disconnected", user);
 				io.to(users[s2]).emit("roDisconnected", user);
 			}
 		}
-	});
-
-	socket.on("setActive", async (data) => {
-		users[data?.id] = socket.id;
-		// console.log(users);
 	});
 
 	socket.on("getClass", async (id, cb) => {
@@ -165,9 +141,7 @@ io.on("connection", (socket) => {
 		}
 	});
 
-	socket.on("startClasses", async (cb) => {
-		console.log("starting cls");
-
+	socket.on("startClasses", async (data, cb) => {
 		let ems = await Class.find({
 			status: "Not Started",
 		});
@@ -177,145 +151,14 @@ io.on("connection", (socket) => {
 
 		if (ems.length === cds.length) {
 			socket.broadcast.emit("startClass");
-			startWatcher();
+			setTimeout(async () => {
+				await startWatcher(data);
+			}, 10000);
+
 			cb("Exams has been started", "");
 		} else {
 			console.log("not equal");
 			cb("", "Number of Exams & Candidates are not equal");
-		}
-	});
-
-	socket.on("clsEnd", async (data, cb) => {
-		let { stdId, clsId } = data;
-		console.log("cls end", data);
-
-		try {
-			socket.broadcast.emit("cdChanging");
-
-			let cls = await Class.findById(clsId);
-
-			let stdIndex = await cls?.students?.indexOf(stdId);
-			let stds = cls?.students;
-			stds?.splice(stdIndex, 1);
-			cls.students = stds;
-			cls.hasToJoin--;
-			let isBreak = false;
-			if (cls.hasToJoin > 0) {
-				isBreak = watcher && (await watcher.isBreak(cls.hasToJoin));
-
-				if (isBreak) {
-					console.log("break time");
-					socket.broadcast.emit("breakTime");
-				}
-			} else {
-				isBreak = false;
-			}
-
-			if (cls.hasToJoin === 0 || cls.hasToJoin < 0) {
-				cls.status = "Finished";
-				cls.hasToJoin = 0;
-
-				socket.broadcast.emit("allClassEnd", "No More Class (:");
-				await Class.updateMany(
-					{},
-					{
-						status: "Finished",
-						hasToJoin: 0,
-						students: [],
-					}
-				);
-				io.to(users[cls.teacher._id]).emit(
-					"allClassEnd",
-					"No More Class (:"
-				);
-				if (cls.roleplayer) {
-					io.to(users[cls.roleplayer._id]).emit(
-						"allClassEnd",
-						"No More Class (:"
-					);
-				}
-
-				checkAllClass(socket);
-				console.log("all students taken class", clsId);
-			}
-
-			await cls.save();
-
-			let classes = await Class.find({
-				students: { $in: [stdId] },
-			}).distinct("_id");
-
-			if (classes.length > 0) {
-				cb({ break: isBreak, type: "joinNextClass", id: classes[0] });
-			} else {
-				socket.broadcast.emit("allClassEnd", "No More Class (:");
-
-				await Class.updateMany(
-					{},
-					{
-						status: "Finished",
-						hasToJoin: 0,
-						students: [],
-					}
-				);
-
-				cb({
-					type: "allClassEnd",
-					text: "No More Class (:",
-				});
-				checkAllClass(socket);
-			}
-		} catch (err) {
-			console.log(err);
-		}
-	});
-
-	// socket.on("markExamEnd", async (id, cb) => {
-	// 	// console.log("marking exam as ended");
-	// 	try {
-	// 		let cls = await Class.findById(id);
-	// 		cls.hasToJoin = 0;
-	// 		cls.status = "Finished";
-	// 		cls.students = [];
-	// 		await cls.save();
-
-	// 		// checkAllClass(socket);
-	// 		cb();
-	// 	} catch (err) {
-	// 		console.log(err);
-	// 	}
-	// });
-
-	socket.on("newClassStarted", async (stdId, clsId) => {
-		try {
-			let cls = await Class.findById(clsId).select([
-				"_id",
-				"subject",
-				"teacher",
-				"classDuration",
-				"roleplayer",
-			]);
-			let std = await User.findById(stdId).select(["name"]);
-			let state = {
-				cls: {
-					_id: cls._id,
-					teacher: cls.teacher.name,
-					t_id: cls.teacher._id,
-					r_id: cls?.roleplayer?._id,
-					roleplayer: cls?.roleplayer?.name,
-				},
-				student: {
-					name: std.name,
-					_id: std._id,
-				},
-				startTime: new Date().toUTCString(),
-				duration: cls.classDuration,
-			};
-			studentsStates[stdId] = state;
-			// console.log(studentsStates);
-			socket.broadcast.emit("studentsStates", studentsStates);
-		} catch (err) {
-			console.log(err);
 		}
 	});
 
@@ -324,8 +167,10 @@ io.on("connection", (socket) => {
 	// =============
 
 	socket.on("getStudentExamState", (stdId, cb) => {
-		let state = studentsStates[stdId];
-		cb(state);
+		if (watcher) {
+			let state = watcher.getState();
+			cb(state);
+		}
 	});
 
 	// ===========
@@ -538,24 +383,23 @@ const checkAllClass = async (socket) => {
 	}
 };
 
-const startWatcher = async () => {
-	let cls = await Class.find({
-		status: "Not Started",
-	});
-	let classes = await Class.find({
-		status: "Not Started",
-	}).select(["_id"]);
+const startWatcher = async (data) => {
+	const Watcher_V2 = require("./watcher-version2");
+	let exams = await Class.find({});
 
-	let clsIds = classes?.map((item) => item._id.toString());
-	let stdIds = cls[0].students;
-	let clsDuration = cls[0].classDuration;
-	let dBC = 0.5; // delay between classes (30s)
-	let totalExams = cls[0]?.hasToJoin;
-	console.log("starting watcher");
-	watcher = new Watcher(clsIds, stdIds, clsDuration, dBC, totalExams);
-
-	console.log(watcher);
+	watcher = new Watcher_V2(exams, io, users, data);
+	console.log("starting exams");
+	watcher.start();
+	return;
 };
 
 // server listening
 server.listen(PORT, () => console.log("server is running on port ", PORT));
+
+// (async () => {
+
+// 	setTimeout(async () => {
+// 		let state = await wt.rejoin("63cbb911c8dd79cdb07c8449");
+// 		console.log("user state of exam :", state);
+// 	}, 17000);
+// })();
