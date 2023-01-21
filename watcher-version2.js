@@ -1,15 +1,15 @@
 const Class = require("./models/class");
-
+let roomId = "sdfdsj23432dfdfgfd";
 class Watcher_V2 {
-	constructor(exams, io, users) {
+	constructor(exams, io, users, data) {
 		this.exams = exams;
 		this.examIds = exams?.map((item) => item._id.toString());
 		this.stdIds = exams[0]?.students;
 		this.examIntervalTime = exams[0]?.classDuration;
 		this.examInterval = exams[0]?.hasToJoin;
 		this.tempIntervl = 0;
-		this.breakAfter = 2;
-		this.breakTime = 0.1;
+		this.breakAfter = data.breakAfter - 1 || 2;
+		this.breakTime = data.breakDuraion || 1;
 		this.isBreak = false;
 		this.isDelay = false;
 		this.interVal = null;
@@ -19,13 +19,18 @@ class Watcher_V2 {
 	}
 
 	async start() {
-		await this.markExamsAsOngoing();
+		// await this.markExamsAsOngoing();
+		if (this.tempIntervl === 0) {
+			this.io.sockets.emit("examsStarted");
+		}
+
 		this.exams.map((exam) => (exam.status = "Ongoing"));
 		this.startExam(this.tempIntervl);
 		this.interVal = setInterval(async () => {
 			if (this.tempIntervl == this.examInterval - 1) {
 				console.log("===== exams ended =====");
-				await this.markExamsAsFinished();
+				this.io.sockets.emit("examsEnded");
+				// await this.markExamsAsFinished();
 				clearInterval(this.interVal);
 				return;
 			} else {
@@ -54,7 +59,7 @@ class Watcher_V2 {
 				tempId = exam.students[0];
 			}
 
-			this.io.to(this.users[tempId]).emit("examIdEx", exam._id);
+			this.io.to(this.users[tempId]).emit("examIdCd", exam._id);
 
 			this.states[exam._id] = {
 				ex: exam.teacher._id,
@@ -64,13 +69,16 @@ class Watcher_V2 {
 			};
 			// console.log("students: ", exam.students, "exam no: ", index + 1);
 		});
-
+		this.sendUpdate();
 		// console.log(this.states);
 		console.log("================ Session : => ", examCount + 1, "(end)");
 	}
 	endExam(examCount) {
 		console.log("exam end called");
 		this.io.sockets.emit("examEnd");
+
+		// this.io.emit("examEnd", "message");
+		// this.io.to(roomId).emit("examEnd", "message");
 
 		this.exams.forEach((exam, index) => {
 			let tempId = exam.students.at(index - examCount);
@@ -91,7 +99,7 @@ class Watcher_V2 {
 
 		if (this.breakAfter === this.tempIntervl) {
 			clearInterval(this.interVal);
-			console.log("break started");
+			console.log("break started (", this.breakTime, " m)");
 			this.isBreak = true;
 			this.io.sockets.emit("breakStart");
 
@@ -106,15 +114,20 @@ class Watcher_V2 {
 		} else {
 			this.tempIntervl++;
 			console.log("delay started");
+
+			this.io.sockets.emit("delayStart");
+
 			this.isDelay = true;
 			setTimeout(() => {
-				console.log("delay end");
+				this.io.sockets.emit("delayEnd");
 				this.isDelay = false;
 				console.log("starting next exam");
 
 				this.startExam(this.tempIntervl);
-			}, 2 * 1000);
+			}, 5 * 1000);
 		}
+
+		// this.sendUpdate();
 	}
 
 	// rejoining
@@ -204,6 +217,25 @@ class Watcher_V2 {
 			}
 		);
 		return true;
+	}
+
+	// get current state
+
+	getState() {
+		return this.states;
+	}
+
+	//  semding states update to admin
+	sendUpdate() {
+		this.io.sockets.emit("examsState", this.states);
+		return;
+	}
+
+	// update users (socket id)
+
+	updateUsers(users) {
+		this.users = users;
+		return;
 	}
 }
 
