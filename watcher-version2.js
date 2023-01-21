@@ -1,3 +1,5 @@
+const Class = require("./models/class");
+
 class Watcher_V2 {
 	constructor(exams, io, users) {
 		this.exams = exams;
@@ -9,19 +11,21 @@ class Watcher_V2 {
 		this.breakAfter = 2;
 		this.breakTime = 0.1;
 		this.isBreak = false;
+		this.isDelay = false;
 		this.interVal = null;
 		this.states = {};
 		this.io = io;
 		this.users = users; // users with socket id
-		// this.isEnd = false;
 	}
 
-	start() {
+	async start() {
+		await this.markExamsAsOngoing();
 		this.exams.map((exam) => (exam.status = "Ongoing"));
 		this.startExam(this.tempIntervl);
-		this.interVal = setInterval(() => {
+		this.interVal = setInterval(async () => {
 			if (this.tempIntervl == this.examInterval - 1) {
 				console.log("===== exams ended =====");
+				await this.markExamsAsFinished();
 				clearInterval(this.interVal);
 				return;
 			} else {
@@ -32,7 +36,7 @@ class Watcher_V2 {
 	}
 
 	startExam(examCount) {
-		console.log("================ Session : => ", examCount + 1, "(end)");
+		console.log("================ Session : => ", examCount + 1, "(start)");
 		this.exams.forEach((exam, index) => {
 			if (examCount === 0) {
 				this.io
@@ -61,7 +65,7 @@ class Watcher_V2 {
 			// console.log("students: ", exam.students, "exam no: ", index + 1);
 		});
 
-		console.log(this.states);
+		// console.log(this.states);
 		console.log("================ Session : => ", examCount + 1, "(end)");
 	}
 	endExam(examCount) {
@@ -102,13 +106,104 @@ class Watcher_V2 {
 		} else {
 			this.tempIntervl++;
 			console.log("delay started");
+			this.isDelay = true;
 			setTimeout(() => {
 				console.log("delay end");
-				console.log("calling startExam again");
+				this.isDelay = false;
+				console.log("starting next exam");
 
 				this.startExam(this.tempIntervl);
 			}, 2 * 1000);
 		}
+	}
+
+	// rejoining
+
+	async rejoin(id) {
+		console.log("===== rejoin s =====");
+
+		console.log("id :", id);
+
+		if (this.isDelay) {
+			console.log("delay");
+
+			return {
+				canJoin: false,
+				rt: null,
+				id: null,
+				break: false,
+				delay: true,
+			};
+		} else if (this.isBreak) {
+			console.log("break");
+
+			return {
+				canJoin: false,
+				rt: null,
+				id: null,
+				break: true,
+				delay: false,
+			};
+		} else {
+			let ex_id = Object.keys(this.states).find(
+				(key) => this.states[key].ex === id
+			);
+			let rp_id = Object.keys(this.states).find(
+				(key) => this.states[key].rp === id
+			);
+			let cd_id = Object.keys(this.states).find(
+				(key) => this.states[key].cd === id
+			);
+
+			let eId;
+			if (ex_id) eId = ex_id;
+			if (rp_id) eId = rp_id;
+			if (cd_id) eId = cd_id;
+
+			let endTime = Date.now();
+			let timeDiff = (endTime - this.states[eId].st) / 1000;
+			let remainingTime = this.examIntervalTime - timeDiff / 60;
+
+			console.log(remainingTime.toFixed(2));
+
+			return {
+				canJoin: true,
+				rt: remainingTime.toFixed(2),
+				id: eId,
+				break: false,
+				delay: false,
+			};
+		}
+
+		console.log("===== rejoin e =====");
+	}
+
+	// marking exams as ongoing
+
+	async markExamsAsOngoing() {
+		await Class.updateMany(
+			{
+				status: "Not Started",
+			},
+			{
+				status: "Ongoing",
+			}
+		);
+		return true;
+	}
+	// marking exams as finished
+	async markExamsAsFinished() {
+		await Class.updateMany(
+			{
+				status: "Ongoing",
+			},
+			{
+				status: "Finished",
+				hasToJoin: 0,
+				students: [],
+			}
+		);
+		return true;
 	}
 }
 
