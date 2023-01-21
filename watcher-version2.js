@@ -7,7 +7,7 @@ class Watcher_V2 {
 		this.examInterval = exams[0]?.hasToJoin;
 		this.tempIntervl = 0;
 		this.breakAfter = 2;
-		this.breakTime = 0.25;
+		this.breakTime = 0.1;
 		this.isBreak = false;
 		this.interVal = null;
 		this.states = {};
@@ -54,6 +54,7 @@ class Watcher_V2 {
 
 			this.states[exam._id] = {
 				ex: exam.teacher._id,
+				rp: exam?.roleplayer?._id,
 				cd: tempId,
 				st: Date.now(),
 			};
@@ -77,6 +78,7 @@ class Watcher_V2 {
 
 			this.states[exam._id] = {
 				ex: exam.teacher._id,
+				rp: exam?.roleplayer?._id,
 				cd: "",
 				st: "",
 			};
