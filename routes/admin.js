@@ -255,8 +255,8 @@ const getRoles = async (req, res, role) => {
 		return !this.has(n);
 	}, new Set(examsIds));
 
-	console.log("freeRoles :", freeRoles);
-	console.log("roles :", roles);
+	// console.log("freeRoles :", freeRoles);
+	// console.log("roles :", roles);
 
 	// [
 	//   { _id: new ObjectId("63b17709f5eab7b9b8f124d0"), name: 'Teacher 1' },
@@ -267,9 +267,9 @@ const getRoles = async (req, res, role) => {
 		freeRoles.includes(item._id.toString())
 	);
 
-	console.log(rolesCanAdd);
+	// console.log(rolesCanAdd);
 
-	console.log("=================");
+	// console.log("=================");
 	res.status(200).send({
 		roles: rolesCanAdd,
 	});
