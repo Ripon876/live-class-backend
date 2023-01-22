@@ -1,14 +1,14 @@
 const Class = require("./models/class");
 let roomId = "sdfdsj23432dfdfgfd";
 class Watcher_V2 {
-	constructor(exams, io, users, data) {
+	constructor(exams, io, users, data,clearStates) {
 		this.exams = exams;
 		this.examIds = exams?.map((item) => item._id.toString());
 		this.stdIds = exams[0]?.students;
 		this.examIntervalTime = exams[0]?.classDuration;
 		this.examInterval = exams[0]?.hasToJoin;
 		this.tempIntervl = 0;
-		this.breakAfter = data.breakAfter - 1 || 2;
+		this.breakAfter = data.breakAfter   || 2;
 		this.breakTime = data.breakDuraion || 1;
 		this.isBreak = false;
 		this.isDelay = false;
@@ -16,6 +16,7 @@ class Watcher_V2 {
 		this.states = {};
 		this.io = io;
 		this.users = users; // users with socket id
+		this.cs = clearStates;
 	}
 
 	async start() {
@@ -30,6 +31,7 @@ class Watcher_V2 {
 			if (this.tempIntervl == this.examInterval - 1) {
 				console.log("===== exams ended =====");
 				this.io.sockets.emit("examsEnded");
+				this.cs();
 				// await this.markExamsAsFinished();
 				clearInterval(this.interVal);
 				return;

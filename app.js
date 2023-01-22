@@ -162,17 +162,52 @@ io.on("connection", (socket) => {
 		}
 	});
 
+	socket.on("newClassStarted", async (stdId, clsId) => {
+		try {
+			let cls = await Class.findById(clsId).select([
+				"_id",
+				"subject",
+				"teacher",
+				"classDuration",
+				"roleplayer",
+			]);
+			let std = await User.findById(stdId).select(["name"]);
+			let state = {
+				cls: {
+					_id: cls._id,
+					teacher: cls.teacher.name,
+					t_id: cls.teacher._id,
+					r_id: cls?.roleplayer?._id,
+					roleplayer: cls?.roleplayer?.name,
+				},
+				student: {
+					name: std.name,
+					_id: std._id,
+				},
+				startTime: new Date().toUTCString(),
+				duration: cls.classDuration,
+			};
+			studentsStates[stdId] = state;
+			socket.broadcast.emit("studentsStates", studentsStates);
+		} catch (err) {
+			console.log(err);
+		}
+	});
+
 	// ===========
 	//  candidate
 	// =============
 
-	socket.on("getStudentExamState", (stdId, cb) => {
+	/*	socket.on("getStudentExamState", (stdId, cb) => {
 		if (watcher) {
 			let state = watcher.getState();
 			cb(state);
 		}
+	});*/
+	socket.on("getStudentExamState", (stdId, cb) => {
+		let state = studentsStates[stdId];
+		cb(state);
 	});
-
 	// ===========
 	//  roleplayer
 	// =============
@@ -387,7 +422,11 @@ const startWatcher = async (data) => {
 	const Watcher_V2 = require("./watcher-version2");
 	let exams = await Class.find({});
 
-	watcher = new Watcher_V2(exams, io, users, data);
+	const clearStates = () => {
+		studentsStates = {};
+		io.sockets.emit("studentsStates", studentsStates);
+	};
+	watcher = new Watcher_V2(exams, io, users, data,clearStates);
 	console.log("starting exams");
 	watcher.start();
 	return;
