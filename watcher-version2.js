@@ -1,15 +1,15 @@
 const Class = require("./models/class");
 let roomId = "sdfdsj23432dfdfgfd";
 class Watcher_V2 {
-	constructor(exams, io, users, data,clearStates) {
+	constructor(exams, io, users, data, clearStates) {
 		this.exams = exams;
 		this.examIds = exams?.map((item) => item._id.toString());
 		this.stdIds = exams[0]?.students;
 		this.examIntervalTime = exams[0]?.classDuration;
 		this.examInterval = exams[0]?.hasToJoin;
 		this.tempIntervl = 0;
-		this.breakAfter = data.breakAfter   || 2;
-		this.breakTime = data.breakDuraion || 1;
+		this.breakAfter = data?.breakAfter || 2;
+		this.breakTime = data?.breakDuraion || 1;
 		this.isBreak = false;
 		this.isDelay = false;
 		this.interVal = null;
@@ -27,32 +27,32 @@ class Watcher_V2 {
 
 		this.exams.map((exam) => (exam.status = "Ongoing"));
 		this.startExam(this.tempIntervl);
-		this.interVal = setInterval(async () => {
-			if (this.tempIntervl == this.examInterval - 1) {
-				console.log("===== exams ended =====");
-				this.io.sockets.emit("examsEnded");
-				this.cs();
-				await this.markExamsAsFinished();
-				clearInterval(this.interVal);
-				return;
-			} else {
-				this.endExam(this.tempIntervl);
-			}
-		}, this.examIntervalTime * 60 * 1000);
+
+		// this.interVal = setInterval(async () => {
+		// 	if (this.tempIntervl == this.examInterval - 1) {
+		//
+		// 		clearInterval(this.interVal);
+		// 		return;
+		// 	} else {
+		// 		this.endExam(this.tempIntervl);
+		// 	}
+		// }, this.examIntervalTime * 60 * 1000);
+
 		return;
 	}
 
 	startExam(examCount) {
-		console.log("================ Session : => ", examCount + 1, "(start)");
+		console.log(
+			"================ Session : => ",
+			examCount + 1,
+			"(start) ",
+			new Date().toLocaleTimeString()
+		);
 		this.exams.forEach((exam, index) => {
 			if (examCount === 0) {
 				this.io
 					.to(this.users[exam.teacher._id])
 					.emit("examIdEx", exam._id);
-			
-
-
-
 			}
 			if (exam?.roleplayer) {
 				this.io
@@ -77,10 +77,15 @@ class Watcher_V2 {
 		});
 		this.sendUpdate();
 		// console.log(this.states);
-		console.log("================ Session : => ", examCount + 1, "(end)");
+		// console.log("================ Session : => ", examCount + 1, "(end)");
+
+		setTimeout(() => {
+			this.endExam(this.tempIntervl);
+		}, this.examIntervalTime * 60 * 1000);
 	}
-	endExam(examCount) {
-		console.log("exam end called");
+	async endExam(examCount) {
+		console.log("exam end called :", new Date().toLocaleTimeString());
+
 		this.io.sockets.emit("examEnd");
 
 		// this.io.emit("examEnd", "message");
@@ -103,37 +108,51 @@ class Watcher_V2 {
 			// console.log("students: ", exam.students, "exam no: ", index + 1);
 		});
 
-		if (this.breakAfter === this.tempIntervl) {
-			clearInterval(this.interVal);
-			console.log("break started (", this.breakTime, " m)");
-			this.isBreak = true;
-			this.io.sockets.emit("breakStart");
-
-			this.tempIntervl++;
-			setTimeout(() => {
-				console.log("break end");
-				this.isBreak = false;
-				this.io.sockets.emit("breakEnd");
-				console.log("continueing exams");
-				this.start();
-			}, this.breakTime * 60 * 1000);
+		this.tempIntervl++;
+		if (this.tempIntervl == this.examInterval) {
+			await this.fireExamsEnd();
+			return;
 		} else {
-			this.tempIntervl++;
-			console.log("delay started");
+			if (this.breakAfter === this.tempIntervl) {
+				clearInterval(this.interVal);
+				console.log("break started (", this.breakTime, " m)");
+				this.isBreak = true;
+				this.io.sockets.emit("breakStart");
 
-			this.io.sockets.emit("delayStart");
+				setTimeout(() => {
+					console.log("break end");
+					this.isBreak = false;
+					this.io.sockets.emit("breakEnd");
+					console.log("continueing exams");
+					this.start();
+				}, this.breakTime * 60 * 1000);
+			} else {
+				console.log("delay started :", new Date().toLocaleTimeString());
 
-			this.isDelay = true;
-			setTimeout(() => {
-				this.io.sockets.emit("delayEnd");
-				this.isDelay = false;
-				console.log("starting next exam");
+				this.io.sockets.emit("delayStart");
 
-				this.startExam(this.tempIntervl);
-			}, 30 * 1000);
+				this.isDelay = true;
+				setTimeout(() => {
+					console.log("delay end :", new Date().toLocaleTimeString());
+
+					this.io.sockets.emit("delayEnd");
+					this.isDelay = false;
+					console.log("starting next exam");
+
+					this.startExam(this.tempIntervl);
+				}, 30 * 1000);
+			}
 		}
 
 		// this.sendUpdate();
+	}
+
+	async fireExamsEnd() {
+		console.log("===== exams ended =====");
+		this.io.sockets.emit("examsEnded");
+		await this.markExamsAsFinished();
+		this.cs();
+		return;
 	}
 
 	// rejoining
