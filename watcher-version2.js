@@ -130,7 +130,7 @@ class Watcher_V2 {
 				console.log("starting next exam");
 
 				this.startExam(this.tempIntervl);
-			}, 5 * 1000);
+			}, 30 * 1000);
 		}
 
 		// this.sendUpdate();
