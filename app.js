@@ -97,13 +97,14 @@ io.on("connection", (socket) => {
 				"stdDisconnected",
 				user
 			);
-		}
-		if (user) {
+			delete studentsStates[user];
+			socket.broadcast.emit("studentsStates", studentsStates);
+		} else {
 			let s1 = Object.keys(studentsStates).find(
-				(key) => studentsStates[key].cls?.t_id === user
+				(key) => studentsStates[key]?.cls?.t_id === user
 			);
 			let s2 = Object.keys(studentsStates).find(
-				(key) => studentsStates[key].cls?.r_id === user
+				(key) => studentsStates[key]?.cls?.r_id === user
 			);
 
 			if (s1) {
@@ -112,6 +113,8 @@ io.on("connection", (socket) => {
 			if (s2) {
 				io.to(users[s2]).emit("roDisconnected", user);
 			}
+			delete studentsStates[user];
+			socket.broadcast.emit("studentsStates", studentsStates);
 		}
 	});
 
@@ -155,10 +158,20 @@ io.on("connection", (socket) => {
 				await startWatcher(data);
 			}, 10000);
 
-			cb("Exams has been started", "");
+			cb("Exams will start after 10s", "");
 		} else {
 			console.log("not equal");
 			cb("", "Number of Exams & Candidates are not equal");
+		}
+	});
+
+	socket.on("rejoin", async (stdId, cb) => {
+		try {
+			let state = await watcher.rejoin(stdId);
+
+			cb(state, null);
+		} catch (err) {
+			cb(null, err);
 		}
 	});
 
@@ -425,8 +438,9 @@ const startWatcher = async (data) => {
 	const clearStates = () => {
 		studentsStates = {};
 		io.sockets.emit("studentsStates", studentsStates);
+		watcher = null;
 	};
-	watcher = new Watcher_V2(exams, io, users, data,clearStates);
+	watcher = new Watcher_V2(exams, io, users, data, clearStates);
 	console.log("starting exams");
 	watcher.start();
 	return;

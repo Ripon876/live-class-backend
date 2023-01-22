@@ -20,7 +20,7 @@ class Watcher_V2 {
 	}
 
 	async start() {
-		// await this.markExamsAsOngoing();
+		await this.markExamsAsOngoing();
 		if (this.tempIntervl === 0) {
 			this.io.sockets.emit("examsStarted");
 		}
@@ -32,7 +32,7 @@ class Watcher_V2 {
 				console.log("===== exams ended =====");
 				this.io.sockets.emit("examsEnded");
 				this.cs();
-				// await this.markExamsAsFinished();
+				await this.markExamsAsFinished();
 				clearInterval(this.interVal);
 				return;
 			} else {
@@ -49,6 +49,10 @@ class Watcher_V2 {
 				this.io
 					.to(this.users[exam.teacher._id])
 					.emit("examIdEx", exam._id);
+			
+
+
+
 			}
 			if (exam?.roleplayer) {
 				this.io
