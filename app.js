@@ -8,9 +8,9 @@ const PORT = process.env.PORT || 5000;
 // socket server
 const io = require("socket.io")(server, {
 	cors: {
-		origin: "http://localhost:3000",
+		// origin: "http://localhost:3000",
 		// origin: "https://live-video-class.netlify.app",
-		// origin: "https://rfatutors-osler.app",
+		origin: "https://rfatutors-osler.app",
 		methods: ["GET", "POST"],
 	},
 });
@@ -115,6 +115,15 @@ io.on("connection", (socket) => {
 			}
 			delete studentsStates[user];
 			socket.broadcast.emit("studentsStates", studentsStates);
+		}
+	});
+
+	socket.on("getStdDetails", async (id, cb) => {
+		try {
+			let std = await User.findById(id).select(["name"]);
+			cb(std);
+		} catch (err) {
+			console.log("err: ", err);
 		}
 	});
 

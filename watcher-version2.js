@@ -20,7 +20,7 @@ class Watcher_V2 {
 	}
 
 	async start() {
-		// await this.markExamsAsOngoing();
+		await this.markExamsAsOngoing();
 		if (this.tempIntervl === 0) {
 			this.io.sockets.emit("examsStarted");
 		}
@@ -65,7 +65,9 @@ class Watcher_V2 {
 				tempId = exam.students[0];
 			}
 
-			this.io.to(this.users[tempId]).emit("examIdCd", exam._id);
+			if (examCount !== 0) {
+				this.io.to(this.users[tempId]).emit("examIdCd", exam._id);
+			}
 
 			this.states[exam._id] = {
 				ex: exam.teacher._id,
@@ -117,7 +119,7 @@ class Watcher_V2 {
 				clearInterval(this.interVal);
 				console.log("break started (", this.breakTime, " m)");
 				this.isBreak = true;
-				this.io.sockets.emit("breakStart");
+				this.io.sockets.emit("breakStart",this.breakTime);
 
 				setTimeout(() => {
 					console.log("break end");
@@ -150,7 +152,7 @@ class Watcher_V2 {
 	async fireExamsEnd() {
 		console.log("===== exams ended =====");
 		this.io.sockets.emit("examsEnded");
-		// await this.markExamsAsFinished();
+		await this.markExamsAsFinished();
 		this.cs();
 		return;
 	}
