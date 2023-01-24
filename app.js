@@ -172,7 +172,7 @@ io.on("connection", (socket) => {
 			socket.broadcast.emit("startClass");
 			setTimeout(async () => {
 				await startWatcher(data);
-			}, 2000);
+			}, 5000);
 
 			cb("Exams will start after 10s", "");
 		} else {
