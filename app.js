@@ -8,9 +8,9 @@ const PORT = process.env.PORT || 5000;
 // socket server
 const io = require("socket.io")(server, {
 	cors: {
-		// origin: "http://localhost:3000",
+		origin: "http://localhost:3000",
 		// origin: "https://live-video-class.netlify.app",
-		origin: "https://rfatutors-osler.app",
+		// origin: "https://rfatutors-osler.app",
 		methods: ["GET", "POST"],
 	},
 });
@@ -135,6 +135,22 @@ io.on("connection", (socket) => {
 		}
 	});
 
+	socket.on("getCd", async (examID, cb) => {
+		try {
+			let state = watcher.getState();
+
+			let cdId = state[examID].cd;
+
+			let std = await User.findById(cdId).select(["name"]);
+			cb({
+				name: std.name,
+				id: std._id,
+			});
+		} catch (err) {
+			console.log(err);
+		}
+	});
+
 	socket.on("getStudent", async (id, cb) => {
 		try {
 			let std = await User.findById(id).select(["name", "_id"]);
@@ -156,7 +172,7 @@ io.on("connection", (socket) => {
 			socket.broadcast.emit("startClass");
 			setTimeout(async () => {
 				await startWatcher(data);
-			}, 10000);
+			}, 2000);
 
 			cb("Exams will start after 10s", "");
 		} else {
@@ -175,19 +191,24 @@ io.on("connection", (socket) => {
 		}
 	});
 
-	socket.on("newClassStarted", async (stdId, clsId) => {
+	socket.on("newStationStarted", async (examID, cb) => {
 		try {
-			let cls = await Class.findById(clsId).select([
+			let state = watcher.getState();
+
+			let cdId = state[examID].cd;
+
+			let cls = await Class.findById(examID).select([
 				"_id",
 				"subject",
 				"teacher",
 				"classDuration",
 				"roleplayer",
 			]);
-			let std = await User.findById(stdId).select(["name"]);
-			let state = {
+
+			let std = await User.findById(cdId).select(["name"]);
+			let newState = {
 				cls: {
-					_id: cls._id,
+					_id: examID,
 					teacher: cls.teacher.name,
 					t_id: cls.teacher._id,
 					r_id: cls?.roleplayer?._id,
@@ -200,8 +221,14 @@ io.on("connection", (socket) => {
 				startTime: new Date().toUTCString(),
 				duration: cls.classDuration,
 			};
-			studentsStates[stdId] = state;
+
+			studentsStates[cdId] = newState;
 			socket.broadcast.emit("studentsStates", studentsStates);
+
+			cb({
+				name: std.name,
+				id: std._id,
+			});
 		} catch (err) {
 			console.log(err);
 		}
