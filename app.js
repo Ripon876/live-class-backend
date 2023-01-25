@@ -35,7 +35,8 @@ const corsOptions = {
 	},
 	credentials: true,
 };
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
+app.use('*', cors());
 
 // default body parser
 app.use(express.json({ limit: "10mb" }));
