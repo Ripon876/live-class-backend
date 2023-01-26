@@ -8,8 +8,8 @@ class Watcher_V2 {
 		this.examIntervalTime = exams[0]?.classDuration;
 		this.examInterval = exams[0]?.hasToJoin;
 		this.tempIntervl = 0;
-		this.breakAfter = data?.breakAfter || 2;
-		this.breakTime = data?.breakDuraion || 1;
+		this.breakAfter = data?.breakAfter;
+		this.breakTime = data?.breakDuraion;
 		this.isBreak = false;
 		this.isDelay = false;
 		this.interVal = null;
@@ -20,7 +20,7 @@ class Watcher_V2 {
 	}
 
 	async start() {
-		await this.markExamsAsOngoing();
+		// await this.markExamsAsOngoing();
 		if (this.tempIntervl === 0) {
 			this.io.sockets.emit("examsStarted");
 		}
@@ -116,7 +116,7 @@ class Watcher_V2 {
 			return;
 		} else {
 			if (this.breakAfter === this.tempIntervl) {
-				clearInterval(this.interVal);
+				// clearInterval(this.interVal);
 				console.log("break started (", this.breakTime, " m)");
 				this.isBreak = true;
 				this.io.sockets.emit("breakStart",this.breakTime);
@@ -152,7 +152,7 @@ class Watcher_V2 {
 	async fireExamsEnd() {
 		console.log("===== exams ended =====");
 		this.io.sockets.emit("examsEnded");
-		await this.markExamsAsFinished();
+		// await this.markExamsAsFinished();
 		this.cs();
 		return;
 	}
