@@ -441,16 +441,7 @@ app.get("/get-start-time", async (req, res) => {
 	}
 });
 
-setInterval(() => {
-	axios
-		.get("https://live-class.onrender.com")
-		.then((res) => {
-			console.log("server is running");
-		})
-		.catch((err) => {
-			console.log(err);
-		});
-}, 600 * 1000);
+ 
 
 const checkAllClass = async (socket) => {
 	try {

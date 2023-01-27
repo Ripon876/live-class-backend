@@ -115,7 +115,7 @@ class Watcher_V2 {
 			await this.fireExamsEnd();
 			return;
 		} else {
-			if (this.breakAfter === this.tempIntervl) {
+			if (this.breakAfter == this.tempIntervl) {
 				// clearInterval(this.interVal);
 				console.log("break started (", this.breakTime, " m)");
 				this.isBreak = true;
