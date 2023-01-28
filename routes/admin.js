@@ -8,7 +8,7 @@ const Mark = require("../models/mark");
 
 router.get("/get-classes", async (req, res) => {
 	try {
-		const classes = await Class.find({});
+		const classes = await Class.find({}).select(["-pdf"]);
 
 		res.status(200).send({
 			classes: classes,

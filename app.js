@@ -8,9 +8,9 @@ const PORT = process.env.PORT || 5000;
 // socket server
 const io = require("socket.io")(server, {
 	cors: {
-		origin: "http://localhost:3000",
+		// origin: "http://localhost:3000",
 		// origin: "https://live-video-class.netlify.app",
-		// origin: "https://rfatutors-osler.app",
+		origin: "https://rfatutors-osler.app",
 		methods: ["GET", "POST"],
 	},
 });
@@ -52,6 +52,7 @@ const auth = require("./middlewares/auth");
 //  routes
 // ============
 
+const generataList = require("./CreateList");
 const singupLogin = require("./routes/signupLogin");
 const admin = require("./routes/admin");
 const teacher = require("./routes/teacher");
@@ -70,6 +71,7 @@ const Watcher = require("./watcher");
 // class & students socket id with their own id
 const users = {};
 let studentsStates = {};
+let online = [];
 
 let watcher;
 let roomId = "sdfdsj23432dfdfgfd";
@@ -441,6 +443,126 @@ app.get("/get-start-time", async (req, res) => {
 	}
 });
 
+app.get("/get-rooms/:id", async (req, res) => {
+	try {
+		console.log(req.params.id);
+		let rooms = await User.findById(req.params.id).select([
+			"rooms",
+			"type",
+		]);
+
+		if (rooms.type !== "student") {
+			if (rooms.type === "teacher" || rooms.type === "roleplayer") {
+				let query = {
+					[rooms?.type + "._id"]: rooms?.id,
+					status: "Not Started",
+				};
+				let exam = await Class.find(query).select(["_id"]);
+
+				// {
+				//     "roomId": "63d46efac23becb0990f6884",
+				//     "time": "Sat, 28 Jan 2023 02:00:00 GMT",
+				//     "durarion": 2,
+				//     "delay": false
+				// }
+
+				res.status(200).send({
+					rooms: [
+						{
+							roomId: exam[0]?._id?.toString(),
+							time: exam[0].startTime,
+							duration: exam[0].classDuration,
+							delay: false,
+						},
+					],
+					msg: "Rooms",
+				});
+			}
+		} else {
+			console.log(rooms);
+			if (rooms?.rooms.length > 0) {
+				res.status(200).send({
+					rooms: rooms.rooms,
+					msg: "Rooms",
+				});
+			}
+		}
+	} catch (err) {
+		res.status(500).json({
+			message: "Error getting rooms",
+			err,
+		});
+	}
+});
+
+app.post("/markOnline", async (req, res) => {
+	try {
+		 
+		// { type: 'student', cd: { name: 's2' }, ex: { name: 'Ex 1' } }
+
+		delete req.body.type;
+
+		let itemIndex = online.findIndex((item) => item.cd === req.body.cd);
+		if (itemIndex == 0 || itemIndex > 0) {
+			online.splice(itemIndex, 1, req.body);
+		} else {
+			online.push(req.body);
+		}
+
+	 
+		res.status(200).send({
+			msg: "Marked Online",
+		});
+	} catch (err) {
+		res.status(500).json({
+			message: "Error marking online",
+			err,
+		});
+	}
+});
+
+app.post("/unmarkOnline", async (req, res) => {
+	try {
+		 
+
+		// { type: 'student', cd: { name: 's2' }, ex: { name: 'Ex 1' } }
+
+		delete req.body.type;
+
+		let itemIndex = online.findIndex((item) => item.exam === req.body.exam);
+		if (itemIndex == 0 || itemIndex > 0) {
+			online.splice(itemIndex, 1);
+		}
+
+		res.status(200).send({
+			msg: "Marked Online",
+		});
+	} catch (err) {
+		res.status(500).json({
+			message: "Error unmarking online",
+			err,
+		});
+	}
+});
+
+app.post("/getCD", async (req, res) => {
+	try {
+
+		 
+		let cd = online.find((item) => item.exam === req.body.id);
+		 
+		res.status(200).send({
+			cd: cd,
+			msg: "Marked Online",
+		});
+	} catch (err) {
+		res.status(500).json({
+			message: "Error getting candidate",
+			err,
+		});
+	}
+});
+
 const checkAllClass = async (socket) => {
 	try {
 		let classes = await Class.find({
@@ -458,30 +580,29 @@ const checkAllClass = async (socket) => {
 };
 
 const startWatcher = async (data) => {
-	// const Watcher_V2 = require("./watcher-version2");
+	const Watcher_V2 = require("./watcher-version2");
 	let exams = await Class.find({});
 
-	// const clearStates = () => {
-	// 	studentsStates = {};
-	// 	io.sockets.emit("studentsStates", studentsStates);
-	// 	watcher = null;
-	// };
-	// watcher = new Watcher_V2(exams, io, users, data, clearStates);
+	const clearStates = () => {
+		studentsStates = {};
+		io.sockets.emit("studentsStates", studentsStates);
+		watcher = null;
+	};
+	watcher = new Watcher_V2(exams, io, users, data, clearStates);
 
-	await generataList(cls, bA, bT);
+	// await generataList(cls, data.breakAfter, data.breakDuraion);
 
 	console.log("starting exams");
-	// watcher.start();
+	watcher.start();
 	return;
 };
 
 // server listening
 server.listen(PORT, () => console.log("server is running on port ", PORT));
 
-const generataList = require("./CreateList");
-(async () => {
-	const cls = await Class.find({});
-	setTimeout(async () => {
-		console.log("generating room list");
-	}, 5000);
-})();
+// (async () => {
+// 	const cls = await Class.find({});
+// 	setTimeout(async () => {
+// 		console.log("generating room list");
+// 	}, 5000);
+// })();

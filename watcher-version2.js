@@ -4,12 +4,12 @@ class Watcher_V2 {
 	constructor(exams, io, users, data, clearStates) {
 		this.exams = exams;
 		this.examIds = exams?.map((item) => item._id.toString());
-		this.stdIds = exams[0]?.students;
+		this.stdIds = [...exams[0]?.students];
 		this.examIntervalTime = exams[0]?.classDuration;
 		this.examInterval = exams[0]?.hasToJoin;
 		this.tempIntervl = 0;
-		this.breakAfter = data?.breakAfter;
-		this.breakTime = data?.breakDuraion;
+		this.breakAfter = data?.breakAfter || 0;
+		this.breakTime = data?.breakDuraion || 0;
 		this.isBreak = false;
 		this.isDelay = false;
 		this.interVal = null;
@@ -20,24 +20,11 @@ class Watcher_V2 {
 	}
 
 	async start() {
-		// await this.markExamsAsOngoing();
+		await this.markExamsAsOngoing();
 		if (this.tempIntervl === 0) {
 			this.io.sockets.emit("examsStarted");
 		}
-
-		this.exams.map((exam) => (exam.status = "Ongoing"));
 		this.startExam(this.tempIntervl);
-
-		// this.interVal = setInterval(async () => {
-		// 	if (this.tempIntervl == this.examInterval - 1) {
-		//
-		// 		clearInterval(this.interVal);
-		// 		return;
-		// 	} else {
-		// 		this.endExam(this.tempIntervl);
-		// 	}
-		// }, this.examIntervalTime * 60 * 1000);
-
 		return;
 	}
 
@@ -48,43 +35,27 @@ class Watcher_V2 {
 			"(start) ",
 			new Date().toLocaleTimeString()
 		);
-		this.exams.forEach((exam, index) => {
-			if (examCount === 0) {
+
+		if (examCount !== 0) {
+			this.stdIds.forEach((id, index) => {
+				let tempExamIds = this.getTempClsIds(this.examIds, index);
 				this.io
-					.to(this.users[exam.teacher._id])
-					.emit("examIdEx", exam._id);
-			}
-			if (exam?.roleplayer) {
-				this.io
-					.to(this.users[exam.roleplayer._id])
-					.emit("examIdRp", exam._id);
-			}
-			let tempId = exam.students.at(index - examCount);
-
-			if (!tempId) {
-				tempId = exam.students[0];
-			}
-
-			if (examCount !== 0) {
-				this.io.to(this.users[tempId]).emit("examIdCd", exam._id);
-			}
-
-			this.states[exam._id] = {
-				ex: exam.teacher._id,
-				rp: exam?.roleplayer?._id,
-				cd: tempId,
-				st: Date.now(),
-			};
-			// console.log("students: ", exam.students, "exam no: ", index + 1);
-		});
-		this.sendUpdate();
-		// console.log(this.states);
-		// console.log("================ Session : => ", examCount + 1, "(end)");
+					.to(id)
+					.emit("examIdCd", tempExamIds[examCount].toString());
+			});
+		}
 
 		setTimeout(() => {
 			this.endExam(this.tempIntervl);
 		}, this.examIntervalTime * 60 * 1000);
 	}
+
+	getTempClsIds(exmsIds, i) {
+		let ids = [...exmsIds];
+		let firstHalf = ids.splice(i);
+		return [...firstHalf, ...ids];
+	}
+
 	async endExam(examCount) {
 		console.log("exam end called :", new Date().toLocaleTimeString());
 
@@ -119,7 +90,7 @@ class Watcher_V2 {
 				// clearInterval(this.interVal);
 				console.log("break started (", this.breakTime, " m)");
 				this.isBreak = true;
-				this.io.sockets.emit("breakStart",this.breakTime);
+				this.io.sockets.emit("breakStart", this.breakTime);
 
 				setTimeout(() => {
 					console.log("break end");
@@ -152,7 +123,7 @@ class Watcher_V2 {
 	async fireExamsEnd() {
 		console.log("===== exams ended =====");
 		this.io.sockets.emit("examsEnded");
-		// await this.markExamsAsFinished();
+		await this.markExamsAsFinished();
 		this.cs();
 		return;
 	}
