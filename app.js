@@ -36,7 +36,7 @@ const corsOptions = {
 	credentials: true,
 };
 // app.use(cors(corsOptions));
-app.use('*', cors());
+app.use("*", cors());
 
 // default body parser
 app.use(express.json({ limit: "10mb" }));
@@ -441,8 +441,6 @@ app.get("/get-start-time", async (req, res) => {
 	}
 });
 
- 
-
 const checkAllClass = async (socket) => {
 	try {
 		let classes = await Class.find({
@@ -460,27 +458,30 @@ const checkAllClass = async (socket) => {
 };
 
 const startWatcher = async (data) => {
-	const Watcher_V2 = require("./watcher-version2");
+	// const Watcher_V2 = require("./watcher-version2");
 	let exams = await Class.find({});
 
-	const clearStates = () => {
-		studentsStates = {};
-		io.sockets.emit("studentsStates", studentsStates);
-		watcher = null;
-	};
-	watcher = new Watcher_V2(exams, io, users, data, clearStates);
+	// const clearStates = () => {
+	// 	studentsStates = {};
+	// 	io.sockets.emit("studentsStates", studentsStates);
+	// 	watcher = null;
+	// };
+	// watcher = new Watcher_V2(exams, io, users, data, clearStates);
+
+	await generataList(cls, bA, bT);
+
 	console.log("starting exams");
-	watcher.start();
+	// watcher.start();
 	return;
 };
 
 // server listening
 server.listen(PORT, () => console.log("server is running on port ", PORT));
 
-// (async () => {
-
-// 	setTimeout(async () => {
-// 		let state = await wt.rejoin("63cbb911c8dd79cdb07c8449");
-// 		console.log("user state of exam :", state);
-// 	}, 17000);
-// })();
+const generataList = require("./CreateList");
+(async () => {
+	const cls = await Class.find({});
+	setTimeout(async () => {
+		console.log("generating room list");
+	}, 5000);
+})();

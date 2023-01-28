@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema({
 		type: String,
 		default: "student",
 	},
+	rooms: [],
 });
 
 const User = mongoose.model("User", userSchema);
