@@ -20,7 +20,7 @@ class Watcher_V2 {
 	}
 
 	async start() {
-		await this.markExamsAsOngoing();
+		// await this.markExamsAsOngoing();
 		if (this.tempIntervl === 0) {
 			this.io.sockets.emit("examsStarted");
 		}
@@ -36,14 +36,26 @@ class Watcher_V2 {
 			new Date().toLocaleTimeString()
 		);
 
-		if (examCount !== 0) {
-			this.stdIds.forEach((id, index) => {
-				let tempExamIds = this.getTempClsIds(this.examIds, index);
+		this.stdIds.forEach((id, index) => {
+			let tempExamIds = this.getTempClsIds(this.examIds, index);
+
+			if (examCount !== 0) {
 				this.io
 					.to(id)
 					.emit("examIdCd", tempExamIds[examCount].toString());
-			});
-		}
+			}
+
+			this.states[tempExamIds[examCount].toString()] = {
+				ex: this.exams[
+					this.examIds.indexOf(tempExamIds[examCount].toString())
+				].teacher._id,
+				rp: this.exams[
+					this.examIds.indexOf(tempExamIds[examCount].toString())
+				]?.roleplayer?._id,
+				cd: id,
+				st: Date.now(),
+			};
+		});
 
 		setTimeout(() => {
 			this.endExam(this.tempIntervl);
@@ -72,7 +84,7 @@ class Watcher_V2 {
 			}
 			exam.students.splice(exam.students.indexOf(tempId), 1);
 
-			this.states[exam._id] = {
+			this.states[exam._id.toString()] = {
 				ex: exam.teacher._id,
 				rp: exam?.roleplayer?._id,
 				cd: "",
@@ -123,7 +135,7 @@ class Watcher_V2 {
 	async fireExamsEnd() {
 		console.log("===== exams ended =====");
 		this.io.sockets.emit("examsEnded");
-		await this.markExamsAsFinished();
+		// await this.markExamsAsFinished();
 		this.cs();
 		return;
 	}
@@ -170,6 +182,17 @@ class Watcher_V2 {
 			if (ex_id) eId = ex_id;
 			if (rp_id) eId = rp_id;
 			if (cd_id) eId = cd_id;
+
+			if (ex_id) {
+				console.log("found id by ex");
+			}
+			if (rp_id) {
+				console.log("found id by rp");
+			}
+			if (cd_id) {
+				console.log(this.states[eId]);
+				console.log("found id by cd");
+			}
 
 			let endTime = Date.now();
 			let timeDiff = (endTime - this.states[eId].st) / 1000;
