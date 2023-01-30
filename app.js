@@ -8,9 +8,9 @@ const PORT = process.env.PORT || 5000;
 // socket server
 const io = require("socket.io")(server, {
 	cors: {
-		origin: "http://localhost:3000",
+		// origin: "http://localhost:3000",
 		// origin: "https://live-video-class.netlify.app",
-		// origin: "https://rfatutors-osler.app",
+		origin: "https://rfatutors-osler.app",
 		methods: ["GET", "POST"],
 	},
 });
@@ -70,55 +70,22 @@ const Watcher = require("./watcher");
 
 // class & students socket id with their own id
 const users = {};
-let studentsStates = {};
 let online = [];
 
 let watcher;
-let roomId = "sdfdsj23432dfdfgfd";
 
 // socket handler
 io.on("connection", (socket) => {
-	console.log("new connection");
+	console.log("users connected");
 	socket.on("setActive", async (data) => {
 		socket.join(data?.id);
-
 		users[data?.id] = socket.id;
 		if (watcher) {
 			watcher.updateUsers(users);
 		}
-		// console.log(users);
 	});
 	socket.on("disconnect", () => {
-		let user = Object.keys(users).find((key) => users[key] === socket.id);
-
-		if (user in studentsStates) {
-			io.to(users[studentsStates[user].cls.t_id]).emit(
-				"stdDisconnected",
-				user
-			);
-			io.to(users[studentsStates[user].cls?.r_id]).emit(
-				"stdDisconnected",
-				user
-			);
-			delete studentsStates[user];
-			socket.broadcast.emit("studentsStates", studentsStates);
-		} else {
-			let s1 = Object.keys(studentsStates).find(
-				(key) => studentsStates[key]?.cls?.t_id === user
-			);
-			let s2 = Object.keys(studentsStates).find(
-				(key) => studentsStates[key]?.cls?.r_id === user
-			);
-
-			if (s1) {
-				io.to(users[s1]).emit("exDisconnected", user);
-			}
-			if (s2) {
-				io.to(users[s2]).emit("roDisconnected", user);
-			}
-			delete studentsStates[user];
-			socket.broadcast.emit("studentsStates", studentsStates);
-		}
+		console.log("users disconnected");
 	});
 
 	socket.on("getStdDetails", async (id, cb) => {
@@ -196,87 +163,10 @@ io.on("connection", (socket) => {
 	socket.on("rejoin", async (stdId, cb) => {
 		try {
 			let state = await watcher.rejoin(stdId);
-
 			cb(state, null);
 		} catch (err) {
 			cb(null, err);
 		}
-	});
-
-	socket.on("newStationStarted", async (examID, cb) => {
-		try {
-			let state = watcher.getState();
-
-			let cdId = state[examID].cd;
-
-			let cls = await Class.findById(examID).select([
-				"_id",
-				"subject",
-				"teacher",
-				"classDuration",
-				"roleplayer",
-			]);
-
-			let std = await User.findById(cdId).select(["name"]);
-			let newState = {
-				cls: {
-					_id: examID,
-					teacher: cls.teacher.name,
-					t_id: cls.teacher._id,
-					r_id: cls?.roleplayer?._id,
-					roleplayer: cls?.roleplayer?.name,
-				},
-				student: {
-					name: std.name,
-					_id: std._id,
-				},
-				startTime: new Date().toUTCString(),
-				duration: cls.classDuration,
-			};
-
-			studentsStates[cdId] = newState;
-			socket.broadcast.emit("studentsStates", studentsStates);
-
-			cb({
-				name: std.name,
-				id: std._id,
-			});
-		} catch (err) {
-			console.log(err);
-		}
-	});
-
-	// ===========
-	//  candidate
-	// =============
-
-	/*	socket.on("getStudentExamState", (stdId, cb) => {
-		if (watcher) {
-			let state = watcher.getState();
-			cb(state);
-		}
-	});*/
-	socket.on("getStudentExamState", (stdId, cb) => {
-		let state = studentsStates[stdId];
-		cb(state);
-	});
-	// ===========
-	//  roleplayer
-	// =============
-
-	socket.on("joinRolplayer", async (rpPId, exId) => {
-		io.to(users[exId]).emit("joinRolplayer", rpPId);
-	});
-
-	socket.on("addWithRoleplayer", async (stdId, clsId) => {
-		// console.log('adding with roleplayer')
-		let exam = await Class.findById(clsId).select(["roleplayer"]);
-		io.to(users[exam.roleplayer._id]).emit("joinCandidate", stdId);
-	});
-
-	socket.on("reConnectWithRp", async (clsId) => {
-		let cls = await Class.findById(clsId).select(["-_id", "teacher"]);
-		io.to(users[cls.teacher._id]).emit("connectWithRp");
 	});
 
 	// ===========
@@ -291,49 +181,6 @@ io.on("connection", (socket) => {
 		online = [];
 		cb(online);
 	});
-	socket.on("getExamInfo", (id, cb) => {
-		let exm = Object.values(studentsStates)?.find((e) => e.cls._id == id);
-
-		cb(exm);
-	});
-
-	// ==========================
-	//  For all role except admin
-	// ==========================
-
-	socket.on("getExamId", async (user, cb) => {
-		try {
-			if (user.type === "student") {
-				let classes = await Class.find({
-					students: { $in: [user.id] },
-					status: "Not Started",
-				}).select(["-students"]);
-
-				let cls = await Class.findById(classes[0]?._id).select([
-					"students",
-					"-_id",
-				]);
-				let firstExamId = cls?.students?.indexOf(user?.id);
-				// console.log(classes, firstExamId);
-
-				cb(false, classes[firstExamId]?._id.toString());
-			} else if (
-				user?.type === "teacher" ||
-				user?.type === "roleplayer"
-			) {
-				let query = {
-					[user?.type + "._id"]: user?.id,
-					status: "Not Started",
-				};
-				let exam = await Class.find(query).select(["_id"]);
-				// console.log(exam);
-				cb(false, exam[0]?._id?.toString());
-			}
-		} catch (err) {
-			// console.log(err);
-			cb(true);
-		}
-	});
 });
 
 app.get("/", (req, res) => {
@@ -343,9 +190,6 @@ app.get("/", (req, res) => {
 });
 
 app.post("/get-exam-id", async (req, res) => {
-	// console.log(req.body);
-	// console.log("htting route");
-
 	let user = req.body;
 	try {
 		if (user.type === "student") {
@@ -577,7 +421,6 @@ const checkAllClass = async (socket) => {
 			watcher = null;
 			console.log("stoping watcher");
 			socket.broadcast.emit("allClsTaken");
-			studentsStates = {};
 		}
 	} catch (err) {
 		console.log(err);
@@ -604,10 +447,3 @@ const startWatcher = async (data) => {
 
 // server listening
 server.listen(PORT, () => console.log("server is running on port ", PORT));
-
-// (async () => {
-// 	const cls = await Class.find({});
-// 	setTimeout(async () => {
-// 		console.log("generating room list");
-// 	}, 5000);
-// })();

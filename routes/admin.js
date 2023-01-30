@@ -132,7 +132,6 @@ router.get("/get-students", async (req, res) => {
 		const students = await User.find({ type: "student" }).select([
 			"-password",
 			"-type",
-			"-_id",
 			"-__v",
 		]);
 		res.status(200).send({
