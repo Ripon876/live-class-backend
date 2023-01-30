@@ -497,7 +497,6 @@ app.get("/get-rooms/:id", async (req, res) => {
 
 app.post("/markOnline", async (req, res) => {
 	try {
-		 
 		// { type: 'student', cd: { name: 's2' }, ex: { name: 'Ex 1' } }
 
 		delete req.body.type;
@@ -509,7 +508,11 @@ app.post("/markOnline", async (req, res) => {
 			online.push(req.body);
 		}
 
-	 
+		io.to(req.body.ex._id).emit("stdInfo", req.body);
+		if (req.body?.rp?._id) {
+			io.to(req.body.rp._id).emit("stdInfo", req.body);
+		}
+
 		res.status(200).send({
 			msg: "Marked Online",
 		});
@@ -523,8 +526,6 @@ app.post("/markOnline", async (req, res) => {
 
 app.post("/unmarkOnline", async (req, res) => {
 	try {
-		 
-
 		// { type: 'student', cd: { name: 's2' }, ex: { name: 'Ex 1' } }
 
 		delete req.body.type;
@@ -533,9 +534,14 @@ app.post("/unmarkOnline", async (req, res) => {
 		if (itemIndex == 0 || itemIndex > 0) {
 			online.splice(itemIndex, 1);
 		}
+		io.to(req.body.ex._id).emit("candidateDisconnected");
+
+		if (req.body?.rp?._id) {
+			io.to(req.body.rp._id).emit("candidateDisconnected");
+		}
 
 		res.status(200).send({
-			msg: "Marked Online",
+			msg: "unMarked Online",
 		});
 	} catch (err) {
 		res.status(500).json({
@@ -547,10 +553,8 @@ app.post("/unmarkOnline", async (req, res) => {
 
 app.post("/getCD", async (req, res) => {
 	try {
-
-		 
 		let cd = online.find((item) => item.exam === req.body.id);
-		 
+
 		res.status(200).send({
 			cd: cd,
 			msg: "Marked Online",
