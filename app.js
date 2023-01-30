@@ -589,8 +589,8 @@ const startWatcher = async (data) => {
 	let exams = await Class.find({});
 
 	const clearStates = () => {
-		studentsStates = {};
-		io.sockets.emit("studentsStates", studentsStates);
+		online = [];
+		io.sockets.emit("examsStates", online);
 		watcher = null;
 	};
 	watcher = new Watcher_V2(exams, io, users, data, clearStates);
