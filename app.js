@@ -284,12 +284,12 @@ io.on("connection", (socket) => {
 	// =============
 
 	socket.on("getExamsStates", (cb) => {
-		cb(studentsStates);
+		cb(online);
 	});
 
 	socket.on("clearStates", (cb) => {
-		studentsStates = {};
-		cb(studentsStates);
+		online = [];
+		cb(online);
 	});
 	socket.on("getExamInfo", (id, cb) => {
 		let exm = Object.values(studentsStates)?.find((e) => e.cls._id == id);
@@ -513,6 +513,7 @@ app.post("/markOnline", async (req, res) => {
 			io.to(req.body.rp._id).emit("stdInfo", req.body);
 		}
 
+		io.sockets.emit("examsStates", online);
 		res.status(200).send({
 			msg: "Marked Online",
 		});
@@ -539,7 +540,7 @@ app.post("/unmarkOnline", async (req, res) => {
 		if (req.body?.rp?._id) {
 			io.to(req.body.rp._id).emit("candidateDisconnected");
 		}
-
+		io.sockets.emit("examsStates", online);
 		res.status(200).send({
 			msg: "unMarked Online",
 		});
