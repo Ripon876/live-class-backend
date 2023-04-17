@@ -1,5 +1,5 @@
 const Class = require("./models/class");
-let roomId = "sdfdsj23432dfdfgfd";
+
 class Watcher_V2 {
 	constructor(exams, io, users, data, clearStates) {
 		this.exams = exams;
@@ -20,7 +20,7 @@ class Watcher_V2 {
 	}
 
 	async start() {
-		// await this.markExamsAsOngoing();
+		await this.markExamsAsOngoing();
 		if (this.tempIntervl === 0) {
 			this.io.sockets.emit("examsStarted");
 		}
@@ -135,7 +135,7 @@ class Watcher_V2 {
 	async fireExamsEnd() {
 		console.log("===== exams ended =====");
 		this.io.sockets.emit("examsEnded");
-		// await this.markExamsAsFinished();
+		await this.markExamsAsFinished();
 		this.cs();
 		return;
 	}
