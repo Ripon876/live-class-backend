@@ -64,11 +64,11 @@ exports.HelperRoutes = (app, io) => {
 
   app.put("/update-user-details", auth, async (req, res) => {
     try {
-      const user = await User.findByIdAndUpdate(req.user.id, req.body, {
-        new: true,
-      });
+      // const user = await User.findByIdAndUpdate(req.user.id, req.body, {
+      //   new: true,
+      // });
       res.status(200).send({
-        message: "Profile updated",
+        message: "Updating profile is disabled for security purpose",
       });
     } catch (err) {
       res.status(500).json({
