@@ -66,9 +66,11 @@ exports.HelperRoutes = (app, io) => {
     try {
       // const user = await User.findByIdAndUpdate(req.user.id, req.body, {
       //   new: true,
-      // });
+      // });res.status(200).send({
+
       res.status(200).send({
-        message: "Updating profile is disabled for security purpose",
+        message:
+          "Updating profile is disabled in view only mode for security reasons",
       });
     } catch (err) {
       res.status(500).json({

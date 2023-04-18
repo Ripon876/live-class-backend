@@ -12,6 +12,7 @@ const {
   AddRoleplayer,
   RemoveRoleplayer,
   RemoveTeacher,
+  RemoveStudent,
   GetStudents,
   AddNewClass,
   RemoveClass,
@@ -35,6 +36,8 @@ router.post("/add-roleplayer", auth, AddRoleplayer);
 router.delete("/remove-roleplayer", RemoveRoleplayer);
 
 router.delete("/remove-instructor", RemoveTeacher);
+
+router.delete("/remove-student", RemoveStudent);
 
 router.get("/get-students", GetStudents);
 

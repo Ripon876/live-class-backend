@@ -80,7 +80,11 @@ exports.GetRoleplayer = async (req, res) => {
 
 exports.AddTeacher = async (req, res) => {
   try {
-    createRole(req, res, "teacher", "Examiner");
+    // createRole(req, res, "teacher", "Examiner");
+    res.status(200).send({
+      message:
+        "Adding teacher is disabled in  view only mode for security reasons",
+    });
   } catch (err) {
     console.log(err);
     res.status(500).json({
@@ -92,7 +96,11 @@ exports.AddTeacher = async (req, res) => {
 
 exports.AddRoleplayer = async (req, res) => {
   try {
-    createRole(req, res, "roleplayer", "Roleplayer");
+    // createRole(req, res, "roleplayer", "Roleplayer");
+    res.status(200).send({
+      message:
+        "Adding roleplayer is disabled in  view only mode for security reasons",
+    });
   } catch (err) {
     console.log(err);
     res.status(500).json({
@@ -104,7 +112,11 @@ exports.AddRoleplayer = async (req, res) => {
 
 exports.RemoveRoleplayer = async (req, res) => {
   try {
-    removeRole(req, res);
+    // removeRole(req, res);
+    res.status(200).send({
+      message:
+        "Deleting roleplayer is disabled in  view only mode for security reasons",
+    });
   } catch (err) {
     console.log(err);
     res.status(500).json({
@@ -116,7 +128,26 @@ exports.RemoveRoleplayer = async (req, res) => {
 
 exports.RemoveTeacher = async (req, res) => {
   try {
-    removeRole(req, res);
+    // removeRole(req, res);
+    res.status(200).send({
+      message:
+        "Deleting teacher is disabled in  view only mode for security reasons",
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      message: "Error deleteing account",
+      err,
+    });
+  }
+};
+exports.RemoveStudent = async (req, res) => {
+  try {
+    // removeRole(req, res);
+    res.status(200).send({
+      message:
+        "Deleting student is disabled in view only mode for security reasons",
+    });
   } catch (err) {
     console.log(err);
     res.status(500).json({
@@ -173,9 +204,18 @@ exports.RemoveClass = async (req, res) => {
   try {
     const id = req.body.id;
     console.log(id);
-    await User.deleteMany({
-      type: "student",
-    });
+    // await User.deleteMany({
+    //   type: "student",
+    // });
+    await User.updateMany(
+      {
+        type: "student",
+      },
+      {
+        rooms: [],
+      },
+      { new: true }
+    );
     await Class.findByIdAndRemove(id);
     await Mark.deleteMany({
       "exam._id": id,
@@ -196,9 +236,14 @@ exports.RenewClasses = async (req, res) => {
   try {
     console.log("New exams start time :", req.query.time);
 
-    await User.deleteMany({
-      type: "student",
-    });
+    await User.updateMany(
+      {
+        type: "student",
+      },
+      {
+        rooms: [],
+      }
+    );
     await Class.updateMany(
       {
         status: "Finished",

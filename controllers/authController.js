@@ -4,6 +4,12 @@ const User = require("../models/user");
 const Class = require("../models/class");
 
 exports.RegisterStudent = async (req, res) => {
+  res.status(201).json({
+    message:
+      "New Student Registration is disabled in  view only mode for security reasons",
+  });
+  return;
+
   try {
     await User.findOne({ email: req.body.email }).then((user) => {
       if (!user) {
