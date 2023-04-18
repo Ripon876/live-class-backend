@@ -1,0 +1,10 @@
+# Live Class and Exam +  Scheduler
+
+The Live Class and Exam Scheduler is a web application designed to help teachers and students schedule and attend live classes and exams online. The application allows administrators to create exams with a particular teacher, role player, exam or class duration, and starting time. Administrators can then assign exams to teachers, who will be able to access them from their dashboard.
+
+The exams or classes work as follows: Suppose there are 5 teachers ,5 students and 5 exam/class. During the first exam/class, teacher 1 will join the exam/class with student 1, and the remaining teachers and students will follow the same pattern. On the second exam/class, student 1 will join the exam with teacher 2, student 2 will join the exam with teacher 3, and so on. The application will automatically rotate the students through the teachers so that each student attends all the teachers.
+
+The number of students, teachers, and exam/class will be the same, ensuring that everyone has the same opportunity to attend all the classes and exams.
+Along with this, there are some other features, like administrator can add questions in checkbox form , can add a question or note in pdf format. Administrator can view live updates about exams/classes , like which student is on which class and with which teacher. Also he can join any exam/class to see what's going on there. Teacher can give checkmark to those questions (added by administrator) accordingly the answers of student. And can also give a mark and a comment for the student. Students can see the pdf that administrator added and also can use a notepad while exams/classes are ongoing. 
+
+Overall, the Live Class and Exam + Scheduler is a useful tool for any educational institution or organization that needs to schedule and conduct live classes and exams online.
