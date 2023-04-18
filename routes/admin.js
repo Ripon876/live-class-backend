@@ -2,8 +2,6 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middlewares/auth");
 
-
-
 const {
   GetClasses,
   GetClass,
@@ -18,7 +16,7 @@ const {
   AddNewClass,
   RemoveClass,
   RenewClasses,
-} = require("../controllers/admincontroller");
+} = require("../controllers/adminController");
 
 router.get("/get-classes", GetClasses);
 
