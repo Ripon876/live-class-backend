@@ -1,15 +1,14 @@
 {
-	"name": "VideoChat",
+	"name":  "LiveClassAndExam",
 	"version": "1.0.0",
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
 		"dev": "nodemon app.js",
 		"start": "node app.js"
 	},
 	"keywords": [],
-	"author": "",
+	"author": "MD Ripon Islam",
 	"license": "ISC",
 	"dependencies": {
 		"axios": "^1.2.2",
